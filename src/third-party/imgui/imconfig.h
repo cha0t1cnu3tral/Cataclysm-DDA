@@ -148,11 +148,14 @@ namespace ImGui
 void CataScreenReaderText(const char* begin, const char* end);
 void CataScreenReaderItem(unsigned int id, const char* label, bool selected);
 void CataScreenReaderState(unsigned int id, const char* label, int flags);
+void CataScreenReaderValue(unsigned int id, const char* begin, const char* end);
 #define CATA_SCREEN_READER_TEXT(begin, end) CataScreenReaderText(begin, end)
 #define CATA_SCREEN_READER_ITEM(id, label, selected) CataScreenReaderItem(id, label, selected)
 #define CATA_SCREEN_READER_STATE(id, label, flags) CataScreenReaderState(id, label, flags)
+#define CATA_SCREEN_READER_VALUE(id, begin, end) CataScreenReaderValue(id, begin, end)
 #else
 #define CATA_SCREEN_READER_TEXT(begin, end) ((void)0)
 #define CATA_SCREEN_READER_ITEM(id, label, selected) ((void)0)
 #define CATA_SCREEN_READER_STATE(id, label, flags) ((void)0)
+#define CATA_SCREEN_READER_VALUE(id, begin, end) ((void)0)
 #endif

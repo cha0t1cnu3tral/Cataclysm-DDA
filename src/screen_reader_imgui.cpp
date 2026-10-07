@@ -5,6 +5,22 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
+namespace
+{
+unsigned int value_id = 0;
+int value_frame = -1;
+std::string widget_value;
+}
+
+void CataScreenReaderValue( unsigned int id, const char *begin, const char *end )
+{
+    if( screen_reader::enabled() && GImGui && ( GImGui->NavId == id || GImGui->ActiveId == id ) ) {
+        value_id = id;
+        value_frame = ImGui::GetFrameCount();
+        widget_value.assign( begin, end );
+    }
+}
+
 // Small integration hooks keep accessibility independent of widget implementations.
 void CataScreenReaderText( const char *begin, const char *end )
 {
@@ -52,9 +68,14 @@ void CataScreenReaderState( unsigned int id, const char *label, int flags )
                                     _( "collapsed" ) );
     }
     if( ImGuiInputTextState *state = ImGui::GetInputTextState( id ) ) {
+        if( value.empty() ) {
+            value = _( "Text input" );
+        }
         if( !( state->Flags & ImGuiInputTextFlags_Password ) ) {
             value += ": " + std::string( state->GetText() );
         }
+    } else if( value_id == id && value_frame == ImGui::GetFrameCount() ) {
+        value += ": " + widget_value;
     }
     if( ctx.LastItemData.ItemFlags & ImGuiItemFlags_Disabled ) {
         value += " " + std::string( _( "unavailable" ) );
