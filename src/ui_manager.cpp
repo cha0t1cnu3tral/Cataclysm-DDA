@@ -1,4 +1,5 @@
 #include "ui_manager.h"
+#include "screen_reader.h"
 
 #include <functional>
 #include <iterator>
@@ -494,7 +495,9 @@ void ui_adaptor::redraw_invalidated( )
                 if( ui.invalidated || ui.is_imgui ) {
                     if( ui.redraw_cb ) {
                         ui.default_cursor();
+                        screen_reader::begin_ui( &ui, ui.is_on_top );
                         ui.redraw_cb( ui );
+                        screen_reader::end_ui();
                         if( ui.cursor_type == cursor::last ) {
                             ui.record_term_cursor();
                             cata_assert( ui.cursor_type != cursor::last );
@@ -516,6 +519,8 @@ void ui_adaptor::redraw_invalidated( )
 #if defined(EMSCRIPTEN)
     emscripten_sleep( 1 );
 #endif
+
+    screen_reader::finish_frame();
 
 #if defined(TILES)
     if( renderer_should_abort_frame() ) {

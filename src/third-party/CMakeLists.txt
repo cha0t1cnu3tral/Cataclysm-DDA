@@ -139,6 +139,8 @@ if (TILES)
                 -w
                 )
 
+        target_compile_definitions(imgui PUBLIC TILES)
+
         if (ANDROID)
             target_link_libraries(imgui PUBLIC SDL3::SDL3)
         elseif (NOT DYNAMIC_LINKING)

@@ -1,4 +1,5 @@
 #include "options.h"
+#include "screen_reader.h"
 
 #include <cfloat>
 #include <climits>
@@ -2062,7 +2063,7 @@ void options_manager::add_options_interface()
            );
 
         add( "SCREEN_READER_MODE", page_id, to_translation( "Screen reader mode" ),
-             to_translation( "On supported UI screens, tweaks display of text to optimize for screen readers.  Targeted towards using the open-source screen reader 'orca' using curses for display." ),
+             to_translation( "Optimizes text layout for screen readers.  Windows tiles builds send UI text and game messages to a running NVDA instance when nvdaControllerClient.dll is installed beside the game.  Control+Shift+F12 toggles this mode; Control+Shift+F11 reads the screen, Control+Shift+F10 repeats speech, Control+Shift+Up/Down reviews text, and Control+Shift+F9 stops speech.  Terminal builds support Orca." ),
              // See doc/USER_INTERFACE_AND_ACCESSIBILITY.md for testing and implementation notes
              false
            );
@@ -3703,6 +3704,9 @@ std::string options_manager::show( bool ingame, const bool world_options_only, b
 
             const PageItem &curr_item = page_items[visible_items[i]];
             auto name_value = fmt_name_value( curr_item, is_selected );
+            if( is_selected ) {
+                screen_reader::text( name_value.first.s + ": " + name_value.second.s, true );
+            }
 
             const std::string name = utf8_truncate( name_value.first.s, name_width );
             mvwprintz( w_options, point( name_col + 3, line_pos ), name_value.first.col, name );
@@ -3752,6 +3756,7 @@ std::string options_manager::show( bool ingame, const bool world_options_only, b
         const PageItem &curr_item = page_items[iCurrentLine];
         std::string tooltip = curr_item.fmt_tooltip( curr_item.group, cOPTIONS );
         fold_and_print( w_options_tooltip, point::zero, iMinScreenWidth - 2, c_white, tooltip );
+        screen_reader::text( tooltip );
 
         if( ingame && iCurrentPage == iWorldOptPage ) {
             mvwprintz( w_options_tooltip, point( 3, 5 ), c_light_red, "%s", _( "Note: " ) );

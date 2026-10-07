@@ -1,4 +1,5 @@
 #include "cursesport.h"
+#include "screen_reader.h"
 #ifndef TUI
 
 #include <cstdint>
@@ -178,6 +179,7 @@ void catacurses::mvwvline( const window &win, const point &p, chtype ch, int n )
 
 void catacurses::wnoutrefresh( const window &win_ )
 {
+    screen_reader::capture_window( win_ );
     cata_cursesport::WINDOW *const win = win_.get<cata_cursesport::WINDOW>();
     // TODO: log win == nullptr
     // Force a redraw when the window is stale against the render epoch even if

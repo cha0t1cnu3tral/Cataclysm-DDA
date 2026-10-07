@@ -1,4 +1,5 @@
 #include "uilist.h"
+#include "screen_reader.h"
 
 #include <cctype>
 #include <algorithm>
@@ -115,6 +116,16 @@ void uilist_impl::draw_controls()
                     for( int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++ ) {
                         auto entry = parent.entries[parent.fentries[i]];
                         bool is_selected = i == parent.fselected;
+                        if( is_selected ) {
+                            std::string spoken = entry.txt + " " + entry.ctxt;
+                            if( !entry.enabled ) {
+                                spoken += " " + std::string( _( "unavailable" ) );
+                            }
+                            if( parent.desc_enabled ) {
+                                spoken += ". " + entry.desc;
+                            }
+                            screen_reader::text( spoken, true );
+                        }
                         ImGui::PushID( i );
                         ImGui::TableNextRow( ImGuiTableRowFlags_None, entry_height );
                         ImGui::TableSetColumnIndex( 0 );

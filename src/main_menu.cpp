@@ -1,4 +1,5 @@
 #include "main_menu.h"
+#include "screen_reader.h"
 
 #include <algorithm>
 #include <array>
@@ -295,6 +296,9 @@ void main_menu::display_sub_menu( int sel, const point &bottom_left, int sel_lin
 void main_menu::print_menu( const catacurses::window &w_open, int iSel, const point &offset,
                             int sel_line )
 {
+    if( screen_reader::enabled() ) {
+        screen_reader::text( _( "Cataclysm: Dark Days Ahead. Control Shift F12 toggles screen reader mode. Control Shift F11 reads the screen." ) );
+    }
     main_menu_button_map.clear();
 
     // Clear Lines
@@ -320,7 +324,7 @@ void main_menu::print_menu( const catacurses::window &w_open, int iSel, const po
     int iLine = 0;
     const int iOffsetX = ( window_width - FULL_SCREEN_WIDTH ) / 2;
 
-    if( get_option<bool>( "SEASONAL_TITLE" ) ) {
+    if( get_option<bool>( "SEASONAL_TITLE" ) && !screen_reader::enabled() ) {
         switch( current_holiday ) {
             case holiday::new_year:
             case holiday::easter:
@@ -339,7 +343,9 @@ void main_menu::print_menu( const catacurses::window &w_open, int iSel, const po
         }
     }
 
-    if( mmenu_title.size() > 1 ) {
+    if( screen_reader::enabled() ) {
+        center_print( w_open, iLine++, c_white, _( "Cataclysm: Dark Days Ahead" ) );
+    } else if( mmenu_title.size() > 1 ) {
         for( const std::string &i_title : mmenu_title ) {
             nc_color cur_color = c_white;
             nc_color base_color = c_white;

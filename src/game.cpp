@@ -1,4 +1,6 @@
 #include "game.h"
+#include "screen_reader.h"
+#include "screen_reader_game.h"
 #include "map_memory.h"
 
 #include <algorithm>
@@ -3391,6 +3393,12 @@ void game::draw( ui_adaptor &ui )
     if( blink_active_phase ) {
         draw_blink_curses();
     }
+    if( screen_reader::enabled() ) {
+        const tripoint_abs_ms location = get_map().get_abs( u.pos_bub() );
+        screen_reader::text( string_format( _( "Position %d, %d, level %d. %s" ),
+                                           location.x(), location.y(), location.z(),
+                                           screen_reader::describe_tile( u.pos_bub() ) ) );
+    }
     wnoutrefresh( w_terrain );
 
     draw_panels( true );
@@ -6129,6 +6137,12 @@ look_around_result game::look_around(
             int first_line = 1;
             const int last_line = getmaxy( w_info ) - 4;
             pre_print_all_tile_info( lp, w_info, first_line, last_line, cache );
+            if( screen_reader::enabled() ) {
+                const tripoint delta = ( lp - u.pos_bub() ).raw();
+                screen_reader::text( string_format( _( "Look cursor: %d east, %d south, %d levels above. %s" ),
+                                                   delta.x, delta.y, delta.z,
+                                                   screen_reader::describe_tile( lp ) ), true );
+            }
 
             wnoutrefresh( w_info );
         } );

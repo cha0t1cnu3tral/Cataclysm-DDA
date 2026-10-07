@@ -1,4 +1,5 @@
 #include "messages.h"
+#include "screen_reader.h"
 
 #include <algorithm>
 #include <array>
@@ -190,6 +191,8 @@ class messages_impl
             }
 
             modify_msg_with_exclamations( msg, type );
+
+            screen_reader::announce( msg );
 
             game_message m = game_message( std::move( msg ), type );
 

@@ -61,6 +61,7 @@
 #include "mission.h"
 #include "npc.h"
 #include "options.h"
+#include "screen_reader.h"
 #include "output.h"
 #include "overmap.h"
 #include "overmap_ui.h"
@@ -5811,6 +5812,50 @@ static void CheckMessages()
         } else {
             switch( ev.type ) {
                 case CATA_KEYDOWN: {
+#if defined(_WIN32)
+                    const auto reader_key = GetKeysym( ev );
+                    if( ( reader_key.mod & KMOD_CTRL ) && ( reader_key.mod & KMOD_SHIFT ) &&
+                        !( reader_key.mod & KMOD_ALT ) ) {
+                        const bool reader_command = reader_key.sym == SDLK_F12 ||
+                                                    ( screen_reader::enabled() &&
+                                                      ( reader_key.sym == SDLK_F11 || reader_key.sym == SDLK_F10 ||
+                                                        reader_key.sym == SDLK_F9 || reader_key.sym == SDLK_F8 ||
+                                                        reader_key.sym == SDLK_F7 || reader_key.sym == SDLK_UP ||
+                                                        reader_key.sym == SDLK_DOWN ) );
+                        if( reader_command ) {
+                            if( !ev.key.repeat ) {
+                                switch( reader_key.sym ) {
+                                    case SDLK_F12:
+                                        screen_reader::toggle();
+                                        ui_manager::redraw();
+                                        break;
+                                    case SDLK_F11:
+                                        screen_reader::read_screen();
+                                        break;
+                                    case SDLK_F10:
+                                        screen_reader::repeat();
+                                        break;
+                                    case SDLK_F9:
+                                        screen_reader::stop();
+                                        break;
+                                    case SDLK_F8:
+                                        screen_reader::surroundings();
+                                        break;
+                                    case SDLK_F7:
+                                        screen_reader::status();
+                                        break;
+                                    case SDLK_UP:
+                                        screen_reader::review( -1 );
+                                        break;
+                                    case SDLK_DOWN:
+                                        screen_reader::review( 1 );
+                                        break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+#endif
 #if defined(__ANDROID__)
                     // Toggle virtual keyboard with Android back button. For some reason I get double inputs, so ignore everything once it's already down.
                     if( GetKeysym( ev ).sym == SDLK_AC_BACK && ac_back_down_time == 0 ) {

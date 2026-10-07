@@ -7706,6 +7706,7 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
             PopColumnsBackground();
     }
 
+    CATA_SCREEN_READER_ITEM(id, label, selected && is_visible);
     // Text stays at the submission position. Alignment/clipping extents ignore SpanAllColumns.
     if (is_visible)
         RenderTextClipped(pos, ImVec2(ImMin(pos.x + size.x, window->WorkRect.Max.x), pos.y + size.y), label, label_end, &label_size, style.SelectableTextAlign, &bb);

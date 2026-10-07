@@ -1,4 +1,5 @@
 #include "overmap_ui.h"
+#include "screen_reader.h"
 
 #include <algorithm>
 #include <array>
@@ -193,6 +194,14 @@ void overmap_sidebar::print_hint( const std::string &action, nc_color color )
 
 void overmap_sidebar::draw_tile_info()
 {
+    if( screen_reader::enabled() ) {
+        const tripoint_abs_omt &cursor = draw_data.cursor_pos;
+        const om_vision_level vision = overmap_buffer.seen( cursor );
+        const std::string name = vision == om_vision_level::unseen ? _( "Unexplored" ) :
+                                 overmap_buffer.ter( cursor ).obj().get_name( vision );
+        screen_reader::text( string_format( _( "Map cursor: %s. Coordinates %d, %d, level %d" ),
+                                           name, cursor.x(), cursor.y(), cursor.z() ), true );
+    }
     const tripoint_abs_omt &cursor_pos = draw_data.cursor_pos;
 
     avatar &player_character = get_avatar();

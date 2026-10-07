@@ -1,4 +1,5 @@
 #include "cata_imgui.h"
+#include "screen_reader.h"
 
 #include <cmath>
 
@@ -829,6 +830,8 @@ void cataimgui::draw_colored_text( const std::string &original_text, nc_color &c
 void cataimgui::draw_colored_text( const std::string &original_text,
                                    float wrap_width, bool *is_selected, bool *is_focused, bool *is_hovered )
 {
+    screen_reader::text( original_text, ( is_selected && *is_selected ) ||
+                         ( is_focused && *is_focused ) );
     if( original_text.empty() ) {
         ImGui::NewLine();
         return;

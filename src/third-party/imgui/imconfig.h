@@ -143,3 +143,13 @@ namespace ImGui
     void MyFunction(const char* name, MyMatrix44* mtx);
 }
 */
+#if defined(_WIN32) && defined(TILES)
+// Cataclysm accessibility bridge: keep these hooks when updating ImGui.
+void CataScreenReaderText(const char* begin, const char* end);
+void CataScreenReaderItem(unsigned int id, const char* label, bool selected);
+#define CATA_SCREEN_READER_TEXT(begin, end) CataScreenReaderText(begin, end)
+#define CATA_SCREEN_READER_ITEM(id, label, selected) CataScreenReaderItem(id, label, selected)
+#else
+#define CATA_SCREEN_READER_TEXT(begin, end) ((void)0)
+#define CATA_SCREEN_READER_ITEM(id, label, selected) ((void)0)
+#endif
