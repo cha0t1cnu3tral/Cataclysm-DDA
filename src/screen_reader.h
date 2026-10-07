@@ -2,8 +2,8 @@
 #ifndef CATA_SRC_SCREEN_READER_H
 #define CATA_SRC_SCREEN_READER_H
 
-#include <string>
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace catacurses

@@ -47,4 +47,3 @@ TEST_CASE( "screen_reader_review_wraps_and_clamps_after_screen_changes", "[scree
     CHECK( screen_reader::next_review_index( 100, 0, 3 ) == 2 );
     CHECK( screen_reader::next_review_index( 100, 1, 0 ) == 0 );
 }
-#include <cstddef>
