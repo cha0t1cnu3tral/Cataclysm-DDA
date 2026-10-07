@@ -32,4 +32,33 @@ void CataScreenReaderItem( unsigned int id, const char *label, bool selected )
         screen_reader::text( value, true );
     }
 }
+
+void CataScreenReaderState( unsigned int id, const char *label, int flags )
+{
+    if( !screen_reader::enabled() || !label || !GImGui ) {
+        return;
+    }
+    const ImGuiContext &ctx = *GImGui;
+    if( ctx.NavId != id && ctx.ActiveId != id ) {
+        return;
+    }
+    std::string value( label, ImGui::FindRenderedTextEnd( label ) );
+    if( flags & ImGuiItemStatusFlags_Checkable ) {
+        value += " " + std::string( flags & ImGuiItemStatusFlags_Checked ? _( "checked" ) :
+                                    _( "not checked" ) );
+    }
+    if( flags & ImGuiItemStatusFlags_Openable ) {
+        value += " " + std::string( flags & ImGuiItemStatusFlags_Opened ? _( "expanded" ) :
+                                    _( "collapsed" ) );
+    }
+    if( ImGuiInputTextState *state = ImGui::GetInputTextState( id ) ) {
+        if( !( state->Flags & ImGuiInputTextFlags_Password ) ) {
+            value += ": " + std::string( state->GetText() );
+        }
+    }
+    if( ctx.LastItemData.ItemFlags & ImGuiItemFlags_Disabled ) {
+        value += " " + std::string( _( "unavailable" ) );
+    }
+    screen_reader::text( value, true );
+}
 #endif

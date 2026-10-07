@@ -3,6 +3,7 @@
 #define CATA_SRC_SCREEN_READER_H
 
 #include <string>
+#include <cstddef>
 #include <vector>
 
 namespace catacurses
@@ -15,7 +16,16 @@ namespace screen_reader
 // The presentation layer is independent of NVDA so it can be tested on all platforms.
 std::string readable_text( const std::string &text );
 std::vector<std::string> changed_lines( const std::vector<std::string> &before,
-                                      const std::vector<std::string> &after );
+                                        const std::vector<std::string> &after );
+struct speech_update {
+    std::string text;
+    bool interrupt = false;
+};
+speech_update describe_changes( const std::vector<std::string> &before,
+                                const std::vector<std::string> &after,
+                                const std::string &old_focus, const std::string &new_focus,
+                                bool entering );
+size_t next_review_index( size_t current, int direction, size_t count );
 bool enabled();
 void begin_ui( const void *identity, bool on_top );
 void end_ui();

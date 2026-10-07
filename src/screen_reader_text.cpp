@@ -45,7 +45,7 @@ std::string readable_text( const std::string &text )
 }
 
 std::vector<std::string> changed_lines( const std::vector<std::string> &before,
-                                      const std::vector<std::string> &after )
+                                        const std::vector<std::string> &after )
 {
     std::vector<std::string> result;
     for( const std::string &line : after ) {
@@ -57,4 +57,37 @@ std::vector<std::string> changed_lines( const std::vector<std::string> &before,
     return result;
 }
 
+speech_update describe_changes( const std::vector<std::string> &before,
+                                const std::vector<std::string> &after,
+                                const std::string &old_focus, const std::string &new_focus,
+                                bool entering )
+{
+    if( !entering && !new_focus.empty() && new_focus != old_focus ) {
+        return { new_focus, true };
+    }
+    const std::vector<std::string> lines = entering ? after : changed_lines( before, after );
+    std::string result;
+    for( const std::string &line : lines ) {
+        if( !result.empty() ) {
+            result += ". ";
+        }
+        result += line;
+    }
+    return { result, entering };
+}
+
+size_t next_review_index( size_t current, int direction, size_t count )
+{
+    if( count == 0 ) {
+        return 0;
+    }
+    current = std::min( current, count - 1 );
+    if( direction < 0 ) {
+        return current == 0 ? count - 1 : current - 1;
+    }
+    if( direction > 0 ) {
+        return ( current + 1 ) % count;
+    }
+    return current;
+}
 } // namespace screen_reader

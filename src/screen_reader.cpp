@@ -96,7 +96,7 @@ class nvda_client
             path.resize( slash + 1 );
             path += L"nvdaControllerClient.dll";
             library = LoadLibraryExW( path.c_str(), nullptr,
-                                     LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32 );
+                                      LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32 );
             if( !library ) {
                 return false;
             }
@@ -119,13 +119,13 @@ class nvda_client
                 return;
             }
             const int length = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
-                                                  static_cast<int>( value.size() ), nullptr, 0 );
+                                                    static_cast<int>( value.size() ), nullptr, 0 );
             if( length <= 0 ) {
                 return;
             }
             std::wstring wide( length, L'\0' );
             MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
-                                static_cast<int>( value.size() ), wide.data(), length );
+                                 static_cast<int>( value.size() ), wide.data(), length );
             if( interrupt ) {
                 cancel();
             }
@@ -201,15 +201,11 @@ void finish_frame()
     frame_ready = false;
     const std::string focus = join( focused );
     const bool new_ui = current_ui != previous_ui;
-    const std::vector<std::string> changes = changed_lines( previous_frame, frame );
+    const speech_update update = describe_changes( previous_frame, frame, previous_focus, focus,
+                                 new_ui );
+    announce( update.text, update.interrupt );
     if( new_ui ) {
-        // Read the prompt as well as the selection on entry (confirmation dialogs, help, etc.).
-        announce( join( frame ), true );
         review_index = 0;
-    } else if( !focus.empty() && focus != previous_focus ) {
-        announce( focus, true );
-    } else if( !changes.empty() ) {
-        announce( join( changes ) );
     }
     previous_ui = current_ui;
     previous_frame = frame;
@@ -258,13 +254,15 @@ void toggle()
     if( !turn_on ) {
         announce( _( "Screen reader mode off." ), true );
     }
-    get_options().get_option( "SCREEN_READER_MODE" ).setValue( std::string( turn_on ? "true" : "false" ) );
+    get_options().get_option( "SCREEN_READER_MODE" ).setValue( std::string(
+                turn_on ? "true" : "false" ) );
     get_options().save();
     previous_ui = nullptr;
     previous_frame.clear();
     previous_focus.clear();
     if( turn_on ) {
-        announce( _( "Screen reader mode on. Control Shift F11 reads the screen. Control Shift F10 repeats speech. Control Shift up and down review text. Control Shift F9 stops speech." ), true );
+        announce( _( "Screen reader mode on. Control Shift F11 reads the screen. Control Shift F10 repeats speech. Control Shift up and down review text. Control Shift F9 stops speech." ),
+                  true );
     }
 }
 
@@ -284,11 +282,7 @@ void review( int direction )
         announce( _( "No screen text available." ), true );
         return;
     }
-    if( direction < 0 ) {
-        review_index = review_index == 0 ? previous_frame.size() - 1 : review_index - 1;
-    } else if( direction > 0 ) {
-        review_index = ( review_index + 1 ) % previous_frame.size();
-    }
+    review_index = next_review_index( review_index, direction, previous_frame.size() );
     announce( previous_frame[review_index], true );
 }
 

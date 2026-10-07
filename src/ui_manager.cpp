@@ -496,8 +496,10 @@ void ui_adaptor::redraw_invalidated( )
                     if( ui.redraw_cb ) {
                         ui.default_cursor();
                         screen_reader::begin_ui( &ui, ui.is_on_top );
-                        ui.redraw_cb( ui );
-                        screen_reader::end_ui();
+                        {
+                            on_out_of_scope reader_scope( [] { screen_reader::end_ui(); } );
+                            ui.redraw_cb( ui );
+                        }
                         if( ui.cursor_type == cursor::last ) {
                             ui.record_term_cursor();
                             cata_assert( ui.cursor_type != cursor::last );
@@ -520,7 +522,6 @@ void ui_adaptor::redraw_invalidated( )
     emscripten_sleep( 1 );
 #endif
 
-    screen_reader::finish_frame();
 
 #if defined(TILES)
     if( renderer_should_abort_frame() ) {
@@ -537,6 +538,7 @@ void ui_adaptor::redraw_invalidated( )
 #endif
     imclient->end_frame();
     imgui_frame_started = false;
+    screen_reader::finish_frame();
 
     // if any ImGui window needed to calculate the size of its contents,
     //  it needs an extra frame to draw. We do that here.

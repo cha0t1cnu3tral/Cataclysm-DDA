@@ -2,12 +2,16 @@
 #include "screen_reader.h"
 
 #include <array>
+#include <algorithm>
+#include <cstdlib>
 #include <string>
+#include <vector>
 
 #include "avatar.h"
 #include "bodypart.h"
 #include "creature.h"
 #include "creature_tracker.h"
+#include "display.h"
 #include "field.h"
 #include "game.h"
 #include "item.h"
@@ -22,6 +26,31 @@
 
 namespace screen_reader
 {
+namespace
+{
+std::string relative_position( const tripoint &offset )
+{
+    std::string result;
+    if( offset.x != 0 ) {
+        result = string_format( offset.x > 0 ? _( "%d east" ) : _( "%d west" ), std::abs( offset.x ) );
+    }
+    if( offset.y != 0 ) {
+        if( !result.empty() ) {
+            result += ", ";
+        }
+        result += string_format( offset.y > 0 ? _( "%d south" ) : _( "%d north" ), std::abs( offset.y ) );
+    }
+    if( offset.z != 0 ) {
+        if( !result.empty() ) {
+            result += ", ";
+        }
+        result += string_format( offset.z > 0 ? _( "%d levels above" ) : _( "%d levels below" ),
+                                 std::abs( offset.z ) );
+    }
+    return result.empty() ? _( "Here" ) : result;
+}
+}
+
 std::string describe_tile( const tripoint_bub_ms &position )
 {
     map &here = get_map();
@@ -47,7 +76,8 @@ std::string describe_tile( const tripoint_bub_ms &position )
     }
     if( const Creature *creature = get_creature_tracker().creature_at<Creature>( position ) ) {
         if( creature != &player && player.sees( here, *creature ) ) {
-            result += ", " + creature->disp_name();
+            result += ", " + creature->disp_name() + " " +
+                      Creature::get_attitude_ui_data( creature->attitude_to( player ) ).first.translated();
         }
     }
     if( here.sees_some_items( position, player ) ) {
@@ -74,25 +104,34 @@ void surroundings()
     map &here = get_map();
     uilist menu;
     menu.title = _( "Surroundings" );
-    menu.text = _( "Use up and down to review. Escape returns to the game. These commands do not use a turn." );
+    menu.text =
+        _( "Use up and down to review. Escape returns to the game. These commands do not use a turn." );
     const std::array<point, 9> offsets = { point( 0, 0 ), point( 0, -1 ), point( 1, -1 ),
-                                         point( 1, 0 ), point( 1, 1 ), point( 0, 1 ),
-                                         point( -1, 1 ), point( -1, 0 ), point( -1, -1 ) };
+                                           point( 1, 0 ), point( 1, 1 ), point( 0, 1 ),
+                                           point( -1, 1 ), point( -1, 0 ), point( -1, -1 )
+                                         };
     const std::array<const char *, 9> labels = { _( "Here" ), _( "North" ), _( "Northeast" ),
-                                              _( "East" ), _( "Southeast" ), _( "South" ),
-                                              _( "Southwest" ), _( "West" ), _( "Northwest" ) };
+                                                 _( "East" ), _( "Southeast" ), _( "South" ),
+                                                 _( "Southwest" ), _( "West" ), _( "Northwest" )
+                                               };
     for( size_t i = 0; i < offsets.size(); ++i ) {
         menu.addentry( static_cast<int>( i ), true, MENU_AUTOASSIGN,
                        std::string( labels[i] ) + ": " + describe_tile( player.pos_bub() + offsets[i] ) );
     }
+    std::vector<std::pair<int, std::string>> visible_creatures;
     for( Creature &creature : g->all_creatures() ) {
         if( &creature == &player || !player.sees( here, creature ) ) {
             continue;
         }
         const tripoint delta = ( creature.pos_bub() - player.pos_bub() ).raw();
-        menu.addentry( static_cast<int>( menu.entries.size() ), true, MENU_AUTOASSIGN,
-                       string_format( _( "%s: %d east, %d south, %d levels above" ),
-                                      creature.disp_name(), delta.x, delta.y, delta.z ) );
+        visible_creatures.emplace_back( std::max( std::abs( delta.x ), std::abs( delta.y ) ),
+                                        creature.disp_name() + " " +
+                                        Creature::get_attitude_ui_data( creature.attitude_to( player ) ).first.translated() +
+                                        ": " + relative_position( delta ) );
+    }
+    std::sort( visible_creatures.begin(), visible_creatures.end() );
+    for( const auto &entry : visible_creatures ) {
+        menu.addentry( static_cast<int>( menu.entries.size() ), true, MENU_AUTOASSIGN, entry.second );
     }
     menu.query();
 }
@@ -108,8 +147,10 @@ void status()
     menu.title = _( "Character status" );
     menu.addentry( 0, true, MENU_AUTOASSIGN, string_format( _( "Stamina: %d of %d" ),
                    player.get_stamina(), player.get_stamina_max() ) );
-    menu.addentry( 1, true, MENU_AUTOASSIGN, string_format( _( "Hunger: %d. Thirst: %d. Sleepiness: %d. Pain: %d" ),
-                   player.get_hunger(), player.get_thirst(), player.get_sleepiness(), player.get_perceived_pain() ) );
+    menu.addentry( 1, true, MENU_AUTOASSIGN,
+                   string_format( _( "Hunger: %s. Thirst: %s. Sleepiness: %s. Pain: %d" ),
+                                  display::hunger_text_color( player ).first, display::thirst_text_color( player ).first,
+                                  display::sleepiness_text_color( player ).first, player.get_perceived_pain() ) );
     for( const bodypart_id &part : player.get_all_body_parts( get_body_part_flags::only_main ) ) {
         menu.addentry( static_cast<int>( menu.entries.size() ), true, MENU_AUTOASSIGN,
                        string_format( _( "%s: health %d of %d" ), part->name.translated(),

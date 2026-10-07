@@ -31,8 +31,8 @@ lists use the usual list controls: up/down, filtering, and Escape to return.
 The game announces position and tile descriptions when moving. Surroundings
 lists compass directions, terrain, furniture, impassable tiles, visible items,
 known traps, fields, vehicles, and visible creatures. Creature positions include
-east/south offsets and level differences from the avatar. Negative east is west;
-negative south is north. Hidden terrain, creatures, traps, and container contents
+compass offsets, attitude, and level differences from the avatar, ordered nearest
+first. Hidden terrain, creatures, traps, and container contents
 must not be disclosed by accessibility descriptions.
 
 The normal Look around action provides a movable cursor. Its spoken description

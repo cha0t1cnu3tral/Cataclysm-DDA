@@ -1007,8 +1007,8 @@ enum ImGuiItemStatusFlags_
     //ImGuiItemStatusFlags_FocusedByTabbing = 1 << 8,   // Removed IN 1.90.1 (Dec 2023). The trigger is part of g.NavActivateId. See commit 54c1bdeceb.
     ImGuiItemStatusFlags_EditedInternal     = 1 << 11,  // Similar to ImGuiItemStatusFlags_Edited but bypassing ImGuiItemFlags_NoMarkEdited.
 
-    // Additional status + semantic for ImGuiTestEngine
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+    // Additional status + semantic for ImGuiTestEngine and Cataclysm accessibility
+#if defined(IMGUI_ENABLE_TEST_ENGINE) || (defined(_WIN32) && defined(TILES))
     ImGuiItemStatusFlags_Openable           = 1 << 20,  // Item is an openable (e.g. TreeNode)
     ImGuiItemStatusFlags_Opened             = 1 << 21,  // Opened status
     ImGuiItemStatusFlags_Checkable          = 1 << 22,  // Item is a checkable (e.g. CheckBox, MenuItem)
@@ -4019,7 +4019,7 @@ extern const char*  ImGuiTestEngine_FindItemDebugLabel(ImGuiContext* ctx, ImGuiI
 #define IMGUI_TEST_ENGINE_LOG(_FMT,...)                     ImGuiTestEngineHook_Log(&g, _FMT, __VA_ARGS__)                                      // Custom log entry from user land into test log
 #else
 #define IMGUI_TEST_ENGINE_ITEM_ADD(_ID,_BB,_ITEM_DATA)      ((void)0)
-#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID,_LABEL,_FLAGS)      do { (void)g; CATA_SCREEN_READER_ITEM(_ID, _LABEL, false); } while (0)
+#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID,_LABEL,_FLAGS)      do { (void)g; CATA_SCREEN_READER_STATE(_ID, _LABEL, _FLAGS); } while (0)
 #endif
 
 //-----------------------------------------------------------------------------
