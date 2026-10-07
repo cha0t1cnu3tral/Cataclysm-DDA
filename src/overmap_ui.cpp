@@ -199,8 +199,16 @@ void overmap_sidebar::draw_tile_info()
         const om_vision_level vision = overmap_buffer.seen( cursor );
         const std::string name = vision == om_vision_level::unseen ? _( "Unexplored" ) :
                                  overmap_buffer.ter( cursor ).obj().get_name( vision );
-        screen_reader::text( string_format( _( "Map cursor: %s. Coordinates %d, %d, level %d" ),
-                                           name, cursor.x(), cursor.y(), cursor.z() ), true );
+        std::string spoken = string_format( _( "Map cursor: %s. Coordinates %d, %d, level %d" ),
+                                            name, cursor.x(), cursor.y(), cursor.z() );
+        const std::string note = overmap_buffer.note( cursor );
+        if( !note.empty() ) {
+            spoken += ". " + string_format( _( "Note: %s" ), note );
+        }
+        for( const om_vehicle &vehicle : overmap_buffer.get_vehicle( cursor ) ) {
+            spoken += ". " + string_format( _( "Tracked vehicle: %s" ), vehicle.name );
+        }
+        screen_reader::text( spoken, true );
     }
     const tripoint_abs_omt &cursor_pos = draw_data.cursor_pos;
 
