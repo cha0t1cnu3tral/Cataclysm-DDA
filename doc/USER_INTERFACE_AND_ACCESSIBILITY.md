@@ -41,6 +41,10 @@ behavior, can be found within `InitSDL` in `sdltiles.cpp`.
 
 ## Compatibility with screen readers
 
+Windows tiles builds can optionally send UI text and game messages directly to
+NVDA. See [Windows screen reader mode](NVDA_ACCESSIBILITY.md) for setup, global
+shortcuts, nonvisual map review, and the playtest checklist.
+
 There are people who use screen readers to play Cataclysm DDA.  There are several
 things to keep in mind when checking the user interface for compatibility with
 screen readers.  These include:
