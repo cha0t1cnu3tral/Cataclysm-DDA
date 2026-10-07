@@ -1746,6 +1746,7 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
     if (text_begin == text_end || text_begin[0] == 0)
         return;
     // No need to strlen() here: font->RenderText() will do it and may early out.
+    CATA_SCREEN_READER_TEXT(text_begin, text_end);
 
     // Pull default font/size from the shared ImDrawListSharedData instance
     if (font == NULL)

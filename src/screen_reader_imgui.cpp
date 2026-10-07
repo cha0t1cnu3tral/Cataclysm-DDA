@@ -28,7 +28,7 @@ void CataScreenReaderText( const char *begin, const char *end )
         return;
     }
     if( !end ) {
-        end = ImGui::FindRenderedTextEnd( begin );
+        end = begin + std::char_traits<char>::length( begin );
     }
     screen_reader::text( std::string( begin, end ) );
 }
