@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -59,6 +60,17 @@ class nvda_client
         void_fn cancel = nullptr;
         void_fn test = nullptr;
 
+        template<typename Function>
+        Function resolve( const char *name ) const {
+            const FARPROC address = GetProcAddress( library, name );
+            Function function = nullptr;
+            // Windows guarantees GetProcAddress returns the exported function's
+            // address. Copy its representation to avoid incompatible FARPROC casts.
+            static_assert( sizeof( function ) == sizeof( address ) );
+            std::memcpy( &function, &address, sizeof( function ) );
+            return function;
+        }
+
         bool safe_to_speak() const {
             DWORD process = 0;
             GetWindowThreadProcessId( GetForegroundWindow(), &process );
@@ -99,10 +111,10 @@ class nvda_client
             if( !library ) {
                 return false;
             }
-            speak = reinterpret_cast<text_fn>( GetProcAddress( library, "nvdaController_speakText" ) );
-            braille = reinterpret_cast<text_fn>( GetProcAddress( library, "nvdaController_brailleMessage" ) );
-            cancel = reinterpret_cast<void_fn>( GetProcAddress( library, "nvdaController_cancelSpeech" ) );
-            test = reinterpret_cast<void_fn>( GetProcAddress( library, "nvdaController_testIfRunning" ) );
+            speak = resolve<text_fn>( "nvdaController_speakText" );
+            braille = resolve<text_fn>( "nvdaController_brailleMessage" );
+            cancel = resolve<void_fn>( "nvdaController_cancelSpeech" );
+            test = resolve<void_fn>( "nvdaController_testIfRunning" );
             return speak && cancel && test;
         }
 
