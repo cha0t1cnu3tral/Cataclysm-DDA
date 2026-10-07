@@ -1,4 +1,5 @@
 #include "dialogue_imgui.h"
+#include "screen_reader.h"
 
 #include <algorithm>
 #include <cmath>
@@ -424,6 +425,9 @@ void dialogue_imgui_impl::draw_responses()
     // To keep things simple we print in that order too.
     for( int i = 0; i < static_cast<int>( response_list.size() ); i++ ) {
         const talk_data &talk = response_list[i];
+        if( sel_response == i ) {
+            screen_reader::text( talk.hotkey_desc + ": " + talk.text, true );
+        }
 
         // Selection indicator
         if( sel_response == i ) {

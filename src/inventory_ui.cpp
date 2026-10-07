@@ -1,4 +1,5 @@
 #include "inventory_ui.h"
+#include "screen_reader.h"
 
 #include <chrono>
 #include <optional>
@@ -1729,6 +1730,27 @@ void inventory_column::draw( const catacurses::window &win, const point &p,
         int yy = p.y + line;
 
         const bool selected = active && is_highlighted( entry );
+        if( selected && screen_reader::enabled() ) {
+            std::string spoken;
+            for( const std::string &cell : entry_cell_cache.text ) {
+                if( !cell.empty() ) {
+                    if( !spoken.empty() ) {
+                        spoken += ". ";
+                    }
+                    spoken += cell;
+                }
+            }
+            if( entry.chosen_count > 0 ) {
+                spoken += ". " + string_format( _( "Selected quantity: %d" ), entry.chosen_count );
+            }
+            if( entry.chevron ) {
+                spoken += ". " + std::string( entry.collapsed ? _( "collapsed" ) : _( "expanded" ) );
+            }
+            if( entry.denial.has_value() && !entry.denial->empty() ) {
+                spoken += ". " + *entry.denial;
+            }
+            screen_reader::text( spoken, true );
+        }
 
         const int hx_max = p.x + get_width();
         inclusive_rectangle<point> rect = inclusive_rectangle<point>( point( x1, yy ),
