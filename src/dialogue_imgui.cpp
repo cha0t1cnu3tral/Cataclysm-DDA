@@ -158,6 +158,9 @@ static void set_cursor_for_center_draw( float width_of_thing_to_draw )
 
 static void print_ASCII_portrait()
 {
+    if( screen_reader::enabled() ) {
+        return;
+    }
     // First line of the ASCII. Should be basically the same width as the next lines.
     set_cursor_for_center_draw( ImGui::CalcTextSize( "|--------------------------|" ).x );
     // This aligns our multi-line text!
