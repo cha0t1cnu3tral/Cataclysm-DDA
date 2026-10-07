@@ -5840,9 +5840,11 @@ static void CheckMessages()
                                         break;
                                     case SDLK_F8:
                                         screen_reader::surroundings();
+                                        ui_manager::redraw();
                                         break;
                                     case SDLK_F7:
                                         screen_reader::status();
+                                        ui_manager::redraw();
                                         break;
                                     case SDLK_UP:
                                         screen_reader::review( -1 );
@@ -5852,6 +5854,9 @@ static void CheckMessages()
                                         break;
                                 }
                             }
+                            // Nested review menus use last_input too. Do not let their
+                            // closing Escape or Enter activate the underlying screen.
+                            last_input = input_event();
                             break;
                         }
                     }
