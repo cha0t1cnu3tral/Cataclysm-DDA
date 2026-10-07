@@ -1,4 +1,5 @@
 #include "output.h"
+#include "screen_reader.h"
 
 #include <cctype>
 // IWYU pragma: no_include <sys/errno.h>
@@ -2385,6 +2386,13 @@ get_bar( const float cur, const float max,
 std::pair<std::string, nc_color> get_hp_bar( const int cur_hp, const int max_hp,
         const bool is_mon )
 {
+    if( screen_reader::enabled() ) {
+        auto result = get_bar( cur_hp, max_hp, 5, !is_mon );
+        const int percent = max_hp > 0 ? std::clamp( static_cast<int>( 100.0 * cur_hp / max_hp ), 0,
+                            100 ) : 0;
+        result.first = string_format( "%d%%", percent );
+        return result;
+    }
     if( cur_hp == 0 ) {
         return std::make_pair( "-----", c_light_gray );
     }
@@ -2393,6 +2401,14 @@ std::pair<std::string, nc_color> get_hp_bar( const int cur_hp, const int max_hp,
 
 std::pair<std::string, nc_color> get_stamina_bar( int cur_stam, int max_stam )
 {
+    if( screen_reader::enabled() ) {
+        auto result = get_bar( cur_stam, max_stam, 5, true,
+        { c_cyan, c_light_cyan, c_yellow, c_light_red, c_red } );
+        const int percent = max_stam > 0 ? std::clamp( static_cast<int>( 100.0 * cur_stam / max_stam ), 0,
+                            100 ) : 0;
+        result.first = string_format( "%d%%", percent );
+        return result;
+    }
     if( cur_stam == 0 ) {
         return std::make_pair( "-----", c_light_gray );
     }

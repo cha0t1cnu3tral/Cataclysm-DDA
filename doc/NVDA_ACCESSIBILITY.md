@@ -47,6 +47,8 @@ The active UI supplies a text snapshot. Entering a screen announces its text;
 changing a selection announces the selected entry. Other changed text is spoken
 without rereading unchanged frames or entries merely reordered by scrolling.
 Text review is separate from game selection and does not activate controls.
+Health and stamina bars become readable percentages in screen reader mode;
+the character-status command additionally provides exact health values.
 Game messages are sent to NVDA as well as retained in the existing message log.
 NVDA braille messages receive the same text where supported.
 
