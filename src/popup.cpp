@@ -1,4 +1,5 @@
 #include "popup.h"
+#include "screen_reader.h"
 
 #include <algorithm>
 #include <array>
@@ -77,6 +78,12 @@ void query_popup_impl::draw_controls()
                 ImGui::SetKeyboardFocusHere( -1 );
             }
             current_line = parent->buttons[ind].pos.y;
+        }
+    }
+    if( screen_reader::enabled() && !parent->buttons.empty() ) {
+        const int selected = mouse_selected_option >= 0 ? mouse_selected_option : keyboard_selected_option;
+        if( selected >= 0 && size_t( selected ) < parent->buttons.size() ) {
+            screen_reader::selection( parent->buttons[selected].text );
         }
     }
 }
@@ -381,6 +388,14 @@ query_popup::result query_popup::query_once()
         }
     }
 
+    if( screen_reader::enabled() && !res.wait_input ) {
+        for( size_t ind = 0; ind < options.size(); ++ind ) {
+            if( res.action == options[ind].action && ind < buttons.size() ) {
+                screen_reader::announce( buttons[ind].text, true );
+                break;
+            }
+        }
+    }
     return res;
 }
 

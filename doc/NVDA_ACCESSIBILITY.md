@@ -112,3 +112,5 @@ feedback on the playable build before publishing the PR.
 Menu navigation speaks the selected option and its state, rather than reading every visible row or changing tooltip. List menus include the selected position. Control+Shift+F11 reads the full screen, including longer descriptions; Control+Shift+Up/Down reviews it line by line.
 
 Movement speech describes the current tile without rereading the sidebar. Game messages still speak as they occur. Control+Shift+F6 reads current/base attributes, stamina, speed, focus, morale, needs, pain, weariness, radiation, bionic power, and body-part health. Control+Shift+F7 opens the same stats as a browsable list. Neither stats command consumes a turn.
+
+Confirmation dialogs speak the current Yes, No, or other button with its key hint. Left/Right changes the spoken selection; hovering a button reads it too. Activating a button by Enter, mouse click, or its shortcut announces the chosen response. This applies only in screen reader mode.
