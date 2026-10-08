@@ -21,12 +21,31 @@ the game is foreground on the normal Windows desktop.
 | Control+Shift+Up/Down | Review the preceding/following text entry; wraps at either end |
 | Control+Shift+F8 | Open a text list of adjacent tiles and visible creatures |
 | Control+Shift+F7 | Open numerical character health and condition information |
+| Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next object inside it |
+| [ / ] | Inside the tracker, browse previous/next visible ground item at the selected object |
+| Enter / Escape | Inside the tracker, start auto-walking to the selected object / close without walking |
 
 The commands besides the toggle apply only while screen reader mode is enabled.
 Reading and reviewing do not consume game turns. The surroundings and status
 lists use the usual list controls: up/down, filtering, and Escape to return.
 
 ## Maps and gameplay
+
+The object tracker lists visible furniture, doors, stairs, ground-item piles,
+vehicles (once each, at the nearest visible part), and creatures on the current
+level, ordered nearest first. It announces the selected object's bearing and the
+selected item's name and quantity. Object and item browsing wrap independently;
+switching objects resets the item selection. Browsing does not consume turns.
+The plain bracket keys retain their existing controls outside the tracker.
+
+Enter uses the game's existing safe auto-move route. Accessible targets are
+approached directly; impassable objects, vehicles, and creatures are approached
+to within one tile. Unreachable routes are reported without moving. Walking uses
+normal turns, safe-mode interruptions, and cancellation controls. Selecting an
+item walks to its object's location; it does not automatically pick it up.
+The game announces arrival or a stopped route. Moving creatures are tracked to
+their selected location rather than chased. Turning screen reader mode off closes
+the tracker. No tracker controls are registered in normal visual mode.
 
 The game announces position and tile descriptions when moving. Surroundings
 lists compass directions, terrain, furniture, impassable tiles, visible items,

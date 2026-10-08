@@ -1,4 +1,6 @@
 #include "game.h" // IWYU pragma: associated
+#include "screen_reader.h"
+#include "screen_reader_tracker.h"
 
 #include <algorithm>
 #include <chrono>
@@ -269,6 +271,10 @@ input_context game::get_player_input( std::string &action )
         ctxt.register_action( "QUIT", to_translation( "Accept your fate" ) );
     } else {
         ctxt = get_default_mode_input_context();
+    }
+    if( screen_reader::enabled() && uquit != QUIT_WATCH ) {
+        ctxt.register_action( "TRACKER_PREVIOUS_OBJECT" );
+        ctxt.register_action( "TRACKER_NEXT_OBJECT" );
     }
 
     here.update_visibility_cache( pos.z() );
@@ -3189,6 +3195,13 @@ bool game::handle_action()
     } else {
         // No auto-move, ask player for input
         ctxt = get_player_input( action );
+        if( screen_reader::enabled() &&
+            ( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ) ) {
+            screen_reader::object_tracker( action == "TRACKER_PREVIOUS_OBJECT" ? -1 : 1 );
+            // Return to the normal turn loop so a newly set destination starts
+            // immediately, without injecting a movement key or spending a turn.
+            return false;
+        }
     }
 
     // Remove asynchronous animations if any action taken before the input timeout

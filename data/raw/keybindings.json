@@ -1,6 +1,30 @@
 [
   {
     "type": "keybinding",
+    "id": "TRACKER_PREVIOUS_OBJECT",
+    "name": "Track previous visible object",
+    "bindings": [ { "input_method": "keyboard_code", "key": "[", "mod": [ "ctrl" ] } ]
+  },
+  {
+    "type": "keybinding",
+    "id": "TRACKER_NEXT_OBJECT",
+    "name": "Track next visible object",
+    "bindings": [ { "input_method": "keyboard_code", "key": "]", "mod": [ "ctrl" ] } ]
+  },
+  {
+    "type": "keybinding",
+    "id": "TRACKER_PREVIOUS_ITEM",
+    "name": "Track previous item at this object",
+    "bindings": [ { "input_method": "keyboard_code", "key": "[" } ]
+  },
+  {
+    "type": "keybinding",
+    "id": "TRACKER_NEXT_ITEM",
+    "name": "Track next item at this object",
+    "bindings": [ { "input_method": "keyboard_code", "key": "]" } ]
+  },
+  {
+    "type": "keybinding",
     "id": "UILIST.UP",
     "name": "Pan up",
     "bindings": [

@@ -1,6 +1,7 @@
 #include "game.h"
 #include "screen_reader.h"
 #include "screen_reader_game.h"
+#include "screen_reader_tracker.h"
 #include "map_memory.h"
 
 #include <algorithm>
@@ -3394,6 +3395,9 @@ void game::draw( ui_adaptor &ui )
         draw_blink_curses();
     }
     if( screen_reader::enabled() ) {
+        screen_reader::update_tracker_walk();
+    }
+    if( screen_reader::enabled() && !screen_reader::tracker_walk_active() ) {
         const tripoint_abs_ms location = get_map().get_abs( u.pos_bub() );
         screen_reader::text( string_format( _( "Position %d, %d, level %d. %s" ),
                                            location.x(), location.y(), location.z(),
