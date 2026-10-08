@@ -30,6 +30,13 @@ namespace
 bool collecting = false;
 int capture_pause_depth = 0;
 bool semantic_selection = false;
+int detail_capture_depth = 0;
+std::vector<std::string> details;
+std::string narration_text;
+const void *narration_source = nullptr;
+size_t narration_revision = 0;
+const void *previous_narration_source = nullptr;
+size_t previous_narration_revision = 0;
 const void *current_ui = nullptr;
 const void *previous_ui = nullptr;
 std::vector<std::string> frame;
@@ -200,6 +207,13 @@ void end_ui()
 
 void text( const std::string &value, bool is_focused )
 {
+    if( enabled() && detail_capture_depth > 0 && capture_pause_depth == 0 ) {
+        const std::string clean = readable_text( value );
+        if( !clean.empty() && std::find( details.begin(), details.end(), clean ) == details.end() ) {
+            details.push_back( clean );
+        }
+        return;
+    }
     if( !collecting || capture_pause_depth > 0 ) {
         return;
     }
@@ -229,6 +243,29 @@ void selection( const std::string &value )
     }
 }
 
+void narration( const std::string &value, const void *source, size_t revision )
+{
+    if( !enabled() || ( !collecting && detail_capture_depth == 0 ) ) {
+        return;
+    }
+    narration_text = readable_text( value );
+    narration_source = source;
+    narration_revision = revision;
+}
+
+detail_capture::detail_capture()
+{
+    if( detail_capture_depth == 0 ) {
+        details.clear();
+    }
+    ++detail_capture_depth;
+}
+
+detail_capture::~detail_capture()
+{
+    --detail_capture_depth;
+}
+
 capture_pause::capture_pause()
 {
     ++capture_pause_depth;
@@ -245,11 +282,26 @@ void finish_frame()
         return;
     }
     frame_ready = false;
+    for( const std::string &detail : details ) {
+        if( std::find( frame.begin(), frame.end(), detail ) == frame.end() ) {
+            frame.push_back( detail );
+        }
+    }
+    details.clear();
     const std::string focus = join( focused );
     const bool new_ui = current_ui != previous_ui;
     const speech_update update = describe_changes( previous_frame, frame, previous_focus, focus,
                                  new_ui );
-    announce( update.text, update.interrupt );
+    const bool new_narration = !narration_text.empty() &&
+                               ( new_ui || narration_source != previous_narration_source ||
+                                 narration_revision != previous_narration_revision );
+    const speech_update spoken = dialogue_speech( update, narration_text, focus, new_narration );
+    announce( spoken.text, spoken.interrupt );
+    if( new_narration ) {
+        previous_narration_source = narration_source;
+        previous_narration_revision = narration_revision;
+    }
+    narration_text.clear();
     if( new_ui ) {
         review_index = 0;
     }

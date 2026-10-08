@@ -38,6 +38,7 @@
 #include "game_constants.h"
 #include "imgui/imgui.h"
 #include "input_context.h"
+#include "screen_reader.h"
 #include "input_enums.h"
 #include "input_popup.h"
 #include "item.h"
@@ -211,8 +212,7 @@ static std::string get_skill_entry_text( const skill_id selected_skill, const av
 
 static uilist_entry get_uilist_entry( const std::string &name )
 {
-    const bool screen_reader_mode = get_option<bool>( "SCREEN_READER_MODE" );
-    uilist_entry cc_entry( screen_reader_mode ? std::string() : name );
+    uilist_entry cc_entry( name );
     cc_entry.hotkey = input_event();
 
     return cc_entry;
@@ -2443,6 +2443,9 @@ void character_creator_ui::setup_input_context( input_context &cc_ictxt, bool qu
     cc_ictxt.register_action( "PREV_TAB" );
     cc_ictxt.register_action( "QUIT" );
     cc_ictxt.register_action( "HELP_KEYBINDINGS" );
+    if( screen_reader::enabled() ) {
+        cc_ictxt.register_action( "CHARACTER_CREATOR_INFO" );
+    }
 
     cc_ictxt.register_action( "SAVE_TEMPLATE" );
     cc_ictxt.register_action( "RANDOMIZE_CHAR_NAME" );
@@ -2614,6 +2617,13 @@ void character_creator_ui::update_uilist_entries()
                 uilist_entry entry = get_uilist_entry( scen->gender_appropriate_name( u.male ) );
                 entry.text_color = scen == cc_uistate.get_selected_scenario() ? COL_SELECTED : COL_NOT_SELECTED;
                 entry.enabled = scen->can_pick().success();
+                if( screen_reader::enabled() ) {
+                    entry.desc = scen->description( u.male );
+                    entry.ctxt = scen == get_scenario() ? _( "Selected scenario" ) : _( "Not selected" );
+                    if( !entry.enabled ) {
+                        entry.desc += "\n" + scen->can_pick().str();
+                    }
+                }
                 menu->addentry( entry );
             }
             set_uilist_selected( menu, cc_uistate.selected_scenario_index );
@@ -2627,6 +2637,13 @@ void character_creator_ui::update_uilist_entries()
                 entry.text_color = prof_id == cc_uistate.get_selected_profession() ? COL_SELECTED :
                                    COL_NOT_SELECTED;
                 entry.enabled = prof_id->can_pick().success();
+                if( screen_reader::enabled() ) {
+                    entry.desc = prof_id->description( u.male );
+                    entry.ctxt = prof_id == u.prof->ident() ? _( "Selected profession" ) : _( "Not selected" );
+                    if( !entry.enabled ) {
+                        entry.desc += "\n" + prof_id->can_pick().str();
+                    }
+                }
                 menu->addentry( entry );
             }
             set_uilist_selected( menu, cc_uistate.selected_profession_index );
@@ -2638,6 +2655,10 @@ void character_creator_ui::update_uilist_entries()
             for( const profession_id prof_id : cc_uistate.sorted_hobbies ) {
                 uilist_entry entry = get_uilist_entry( prof_id->gender_appropriate_name( u.male ) );
                 entry.text_color = u.hobbies.count( &*prof_id ) ? COL_SELECTED : COL_NOT_SELECTED;
+                if( screen_reader::enabled() ) {
+                    entry.desc = prof_id->description( u.male );
+                    entry.ctxt = u.hobbies.count( &*prof_id ) ? _( "Selected background" ) : _( "Not selected" );
+                }
                 menu->addentry( entry );
             }
             break;
@@ -2662,6 +2683,10 @@ void character_creator_ui::update_uilist_entries()
                 trait_id current_trait = cc_uistate.sorted_traits[i];
                 uilist_entry trait_entry = get_uilist_entry( current_trait->name() );
                 trait_entry.retval = i;
+                if( screen_reader::enabled() ) {
+                    trait_entry.desc = current_trait->desc();
+                    trait_entry.ctxt = u.has_trait( current_trait ) ? _( "Selected trait" ) : _( "Not selected" );
+                }
                 trait_entry.text_color = u.has_trait( current_trait ) ? COL_SELECTED : COL_NOT_SELECTED;
                 trait_entry.enabled = !( u.has_conflicting_trait( current_trait ) ||
                                          get_scenario()->is_forbidden_trait( current_trait ) ||
@@ -2677,6 +2702,9 @@ void character_creator_ui::update_uilist_entries()
                 uilist_entry skill_entry = get_uilist_entry( get_skill_entry_text(
                                                cc_uistate.sorted_skills[i]->ident(), u ) );
                 skill_entry.retval = i;
+                if( screen_reader::enabled() ) {
+                    skill_entry.desc = cc_uistate.sorted_skills[i]->description();
+                }
                 menu->addentry( skill_entry );
             }
             break;
@@ -2724,6 +2752,7 @@ void character_creator_ui::update_uilist_position( ImVec2 new_position )
 
 void character_creator_ui_impl::draw_controls()
 {
+    screen_reader::detail_capture capture;
     avatar &pc = get_avatar();
 
     const character_creator_tab switched_tab = cc_uistate.switched_tab;
@@ -2807,6 +2836,16 @@ void character_creator_ui_impl::draw_controls()
         ImGui::EndTabBar();
     }
     cc_uistate.previous_tab = cc_uistate.selected_tab;
+    static const std::array<const char *, CHARACTER_CREATOR_TAB_COUNT> tab_names = {
+        _( "Scenario" ), _( "Profession" ), _( "Background" ), _( "Stats" ),
+        _( "Traits" ), _( "Skills" ), _( "Summary" )
+    };
+    const input_context &input = ui_parent->get_current_tab_input();
+    screen_reader::narration( string_format(
+                                  _( "Character creator. %s tab. %s: next tab. %s: previous tab. Up and down browse choices. Enter selects. Plus and minus change stats or skills. F2 opens character details and editing controls. Control Shift F11 reads details; Control Shift up and down reviews them. %s: change name. On Summary, next tab finishes creation." ),
+                                  tab_names[cc_uistate.selected_tab], input.get_desc( "NEXT_TAB" ),
+                                  input.get_desc( "PREV_TAB" ), input.get_desc( "CHANGE_NAME" ) ),
+                              this, static_cast<size_t>( cc_uistate.selected_tab ) );
 }
 
 void character_creator_ui_impl::draw_top_bar( const avatar &u ) const
@@ -3396,6 +3435,39 @@ bool character_creator_callback::key( const input_context &ctxt, const input_eve
 
 bool character_creator_ui::handle_action( const std::string &action )
 {
+    if( screen_reader::enabled() && action == "CHARACTER_CREATOR_INFO" ) {
+        const avatar &player = get_avatar();
+        std::vector<std::pair<std::string, std::string>> fields = {
+            { "CHANGE_NAME", string_format( _( "Name: %s" ), player.name.empty() ? _( "Random name" ) : player.name ) },
+            { "CHANGE_GENDER", string_format( _( "Gender: %s" ), char_creation::get_gender_string( player.male ) ) },
+            { "CHANGE_OUTFIT", string_format( _( "Outfit: %s" ), char_creation::get_gender_string( outfit ) ) },
+            { "CHANGE_AGE", string_format( _( "Age: %s" ), player.age_string( get_scenario()->start_of_game() ) ) },
+            { "CHANGE_HEIGHT", string_format( _( "Height: %s" ), player.height_string() ) },
+            { "CHANGE_BLOOD_TYPE", string_format( _( "Blood type: %s%s" ), io::enum_to_string( player.my_blood_type ), player.blood_rh_factor ? "+" : "-" ) },
+            { "CHOOSE_LOCATION", _( "Choose starting location" ) },
+            { "CHANGE_START_OF_CATACLYSM", _( "Change cataclysm start date" ) },
+            { "CHANGE_START_OF_GAME", _( "Change game start date" ) },
+            { "RESET_CALENDAR", _( "Reset calendar" ) },
+            { "RANDOMIZE_CHAR_NAME", _( "Randomize name" ) },
+            { "RANDOMIZE_CHAR_DESCRIPTION", _( "Randomize description" ) },
+            { "SAVE_TEMPLATE", _( "Save character template" ) }
+        };
+        if( get_option<bool>( "SELECT_STARTING_CITY" ) ) {
+            fields.emplace_back( "CHOOSE_CITY", _( "Choose starting city" ) );
+        }
+        uilist menu;
+        menu.title = _( "Character details and editing" );
+        menu.text =
+            _( "Up and down choose a field. Enter edits it. Escape returns to character creation." );
+        for( size_t i = 0; i < fields.size(); ++i ) {
+            menu.addentry( static_cast<int>( i ), true, MENU_AUTOASSIGN, fields[i].second );
+        }
+        menu.query();
+        if( menu.ret >= 0 && static_cast<size_t>( menu.ret ) < fields.size() ) {
+            handle_action( fields[menu.ret].first );
+        }
+        return true;
+    }
     avatar &you = get_avatar();
 
     auto mod_stat_base = [&you]( int mod_value ) {

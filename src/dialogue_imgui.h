@@ -2,6 +2,7 @@
 #ifndef CATA_SRC_DIALOGUE_IMGUI_H
 #define CATA_SRC_DIALOGUE_IMGUI_H
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,8 @@ class dialogue_imgui_impl : public cataimgui::window
         };
 
         std::vector<history_message> history;
+        size_t speech_history_start = 0;
+        std::string current_turn_speech;
 
         std::vector<talk_data> response_list;
 

@@ -78,6 +78,15 @@ speech_update describe_changes( const std::vector<std::string> &before,
     return { result, entering };
 }
 
+speech_update dialogue_speech( const speech_update &update, const std::string &narration,
+                               const std::string &focus, bool new_narration )
+{
+    if( new_narration && !narration.empty() ) {
+        return { narration + ( focus.empty() ? std::string() : ". " + focus ), true };
+    }
+    return update;
+}
+
 size_t next_review_index( size_t current, int direction, size_t count )
 {
     if( count == 0 ) {

@@ -44,10 +44,28 @@ TEST_CASE( "screen_reader_menu_focus_ignores_surrounding_layout_changes", "[scre
     const std::vector<std::string> before = { "Choose", "Knife", "Coat", "Description" };
     const std::vector<std::string> after = { "Choose", "Knife", "Coat", "A longer description" };
     CHECK( screen_reader::describe_changes( before, after, "Knife", "Knife", false ).text.empty() );
-    CHECK( screen_reader::describe_changes( {}, after, "", "Coat. 2 of 2", true ).text == "Coat. 2 of 2" );
+    CHECK( screen_reader::describe_changes( {}, after, "", "Coat. 2 of 2",
+                                            true ).text == "Coat. 2 of 2" );
     CHECK( screen_reader::describe_changes( before, after, "Knife", "Coat", false ).text == "Coat" );
     CHECK( screen_reader::describe_changes( {}, { "Confirm quitting?" }, "", "", true ).text ==
            "Confirm quitting?" );
+}
+
+TEST_CASE( "screen_reader_narration_precedes_response_choices_without_repeating",
+           "[screen_reader]" )
+{
+    const screen_reader::speech_update quiet;
+    const auto next_line = screen_reader::dialogue_speech( quiet, "Alex: Please help me.", "Yes",
+                           true );
+    CHECK( next_line.text == "Alex: Please help me.. Yes" );
+    CHECK( next_line.interrupt );
+    CHECK( screen_reader::dialogue_speech( quiet, "Alex: Please help me.", "Yes",
+                                           false ).text.empty() );
+    const screen_reader::speech_update choice { "No", true };
+    CHECK( screen_reader::dialogue_speech( choice, "Alex: Please help me.", "No",
+                                           false ).text == "No" );
+    CHECK( screen_reader::dialogue_speech( quiet, "Alex: Goodbye", "", true ).text == "Alex: Goodbye" );
+    CHECK( screen_reader::dialogue_speech( choice, "", "No", true ).text == "No" );
 }
 
 TEST_CASE( "screen_reader_review_wraps_and_clamps_after_screen_changes", "[screen_reader]" )

@@ -21,6 +21,8 @@ struct speech_update {
     std::string text;
     bool interrupt = false;
 };
+speech_update dialogue_speech( const speech_update &update, const std::string &narration,
+                               const std::string &focus, bool new_narration );
 speech_update describe_changes( const std::vector<std::string> &before,
                                 const std::vector<std::string> &after,
                                 const std::string &old_focus, const std::string &new_focus,
@@ -34,6 +36,15 @@ void capture_window( const catacurses::window &window );
 void text( const std::string &value, bool focused = false );
 // Prefer one complete semantic selection over fragments captured by widgets.
 void selection( const std::string &value );
+void narration( const std::string &value, const void *source, size_t revision );
+class detail_capture
+{
+    public:
+        detail_capture();
+        ~detail_capture();
+        detail_capture( const detail_capture & ) = delete;
+        detail_capture &operator=( const detail_capture & ) = delete;
+};
 class capture_pause
 {
     public:

@@ -1,6 +1,12 @@
 [
   {
     "type": "keybinding",
+    "id": "CHARACTER_CREATOR_INFO",
+    "name": "Character creator details and editing",
+    "bindings": [ { "input_method": "keyboard_any", "key": "F2" } ]
+  },
+  {
+    "type": "keybinding",
     "id": "TRACKER_PREVIOUS_OBJECT",
     "name": "Track previous visible object",
     "bindings": [ { "input_method": "keyboard_code", "key": "[", "mod": [ "ctrl" ] } ]

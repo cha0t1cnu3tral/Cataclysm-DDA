@@ -395,6 +395,7 @@ void dialogue_imgui_impl::add_to_history( const std::string &text, nc_color colo
 
 void dialogue_imgui_impl::draw_history() const
 {
+    screen_reader::narration( current_turn_speech, this, history.size() );
     for( const history_message &msg : history ) {
         cataimgui::TextColoredParagraph( msg.color, msg.text );
         ImGui::NewLine();
@@ -408,6 +409,16 @@ nc_color dialogue_imgui_impl::default_color() const
 
 void dialogue_imgui_impl::set_responses( const std::vector<talk_data> &responses )
 {
+    if( history.size() > speech_history_start ) {
+        current_turn_speech.clear();
+        for( size_t i = speech_history_start; i < history.size(); ++i ) {
+            if( !current_turn_speech.empty() ) {
+                current_turn_speech += ". ";
+            }
+            current_turn_speech += history[i].text;
+        }
+        speech_history_start = history.size();
+    }
     response_list = responses;
 }
 

@@ -83,6 +83,19 @@ ASCII art only in screen reader mode. Normal visual mode keeps its existing UI.
 
 ## Validation before publishing
 
+Character creation uses Tab and Shift+Tab to switch tabs, Up/Down to browse,
+Enter to choose or toggle, and plus/minus to adjust stats and skills. F2 opens
+a keyboard list of name, gender, outfit, age, height, blood type, starting
+location, calendar, randomization, and template controls. Current values and
+selected states are spoken. Control+Shift+F11 reads the detail panel as well as
+the list; line review includes scenario/profession descriptions and summary
+information. On Summary, Tab opens the finish confirmation.
+
+Conversations announce newly added dialogue, including the speaker, before
+the selected response. Moving between responses reads the response alone;
+it does not repeat the conversation history. Full-screen review retains that
+history.
+
 Run the `[screen_reader]` tests. With NVDA running, test the title screen, toggle
 and persistence, every character-creation tab, menus, options, inventory and item
 descriptions, confirmations, crafting, movement, combat/targeting, Look around,
