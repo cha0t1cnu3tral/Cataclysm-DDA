@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
 
 #include "options.h"
+#include "debug.h"
 #include "translations.h"
 
 #if defined(_WIN32) && defined(TILES)
@@ -140,7 +142,13 @@ class nvda_client
             if( interrupt ) {
                 cancel();
             }
-            speak( wide.c_str() );
+            const long result = speak( wide.c_str() );
+            if( result != 0 ) {
+                DebugLog( D_WARNING, D_MAIN ) << "NVDA speech failed: " << result;
+            }
+            if( std::getenv( "CATA_SCREEN_READER_TRACE" ) ) {
+                DebugLog( D_INFO, D_MAIN ) << "NVDA speech result: " << result << " text: " << value;
+            }
             if( braille ) {
                 braille( wide.c_str() );
             }

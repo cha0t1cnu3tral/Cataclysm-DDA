@@ -11,6 +11,7 @@
 #include "avatar.h"
 #include "coordinates.h"
 #include "creature.h"
+#include "debug.h"
 #include "game.h"
 #include "game_constants.h"
 #include "input_context.h"
@@ -144,6 +145,8 @@ void update_tracker_walk()
 
 void object_tracker( int direction, bool items )
 {
+    DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker requested: direction=" << direction
+                               << " items=" << items;
     if( !enabled() || !g || !g->w_terrain ) {
         return;
     }
@@ -200,19 +203,35 @@ void object_tracker( int direction, bool items )
     ctxt.register_action( "CONFIRM" );
     ctxt.register_action( "QUIT" );
     ctxt.register_action( "HELP_KEYBINDINGS" );
+    bool announce_selection = true;
     while( enabled() ) {
         selected_position = get_map().get_abs( objects[cursor.object].position );
         selected_name = objects[cursor.object].name;
         selected_item = cursor.item;
         ui_manager::redraw();
+        if( announce_selection ) {
+            const tracked_object &object = objects[cursor.object];
+            const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
+                                          string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
+                                                  object.items[cursor.item] );
+            const std::string selection = string_format( _( "Object %d of %d: %s. %s. %s" ),
+                                          cursor.object + 1, objects.size(), object.name, bearing( object.position ), item_text );
+            DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker selection: " << selection;
+            // Navigation must speak even when a renderer skips a frame, the
+            // UI snapshot has not changed, or an empty item list is selected.
+            announce( selection, true );
+            announce_selection = false;
+        }
         const std::string action = ctxt.handle_input( 100 );
         if( action == "QUIT" ) {
             return;
         } else if( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ) {
             cursor.cycle_objects( action == "TRACKER_PREVIOUS_OBJECT" ? -1 : 1, objects.size() );
+            announce_selection = true;
         } else if( action == "TRACKER_PREVIOUS_ITEM" || action == "TRACKER_NEXT_ITEM" ) {
             cursor.cycle_items( action == "TRACKER_PREVIOUS_ITEM" ? -1 : 1,
                                 objects[cursor.object].items.size() );
+            announce_selection = true;
         } else if( action == "CONFIRM" ) {
             const tracked_object &object = objects[cursor.object];
             bool reported = false;
