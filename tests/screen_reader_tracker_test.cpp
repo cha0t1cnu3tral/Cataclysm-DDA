@@ -1,7 +1,7 @@
 #include "cata_catch.h"
 #include "screen_reader_tracker.h"
 
-TEST_CASE( "tracker_brackets_distinguish_objects_items_and_other_modifiers",
+TEST_CASE( "tracker_brackets_distinguish_categories_entries_and_other_modifiers",
            "[screen_reader][tracker]" )
 {
     using screen_reader::tracker_key_action;
@@ -15,7 +15,7 @@ TEST_CASE( "tracker_brackets_distinguish_objects_items_and_other_modifiers",
     CHECK( tracker_key_action( 'a', false, false, false ).empty() );
 }
 
-TEST_CASE( "tracker_object_changes_reset_the_item_selection", "[screen_reader][tracker]" )
+TEST_CASE( "tracker_category_changes_reset_the_entry_selection", "[screen_reader][tracker]" )
 {
     screen_reader::tracker_cursor cursor;
     cursor.cycle_items( 1, 5 );
@@ -29,7 +29,7 @@ TEST_CASE( "tracker_object_changes_reset_the_item_selection", "[screen_reader][t
     CHECK( cursor.object == 2 );
 }
 
-TEST_CASE( "tracker_items_wrap_without_changing_the_object", "[screen_reader][tracker]" )
+TEST_CASE( "tracker_entries_wrap_without_changing_the_category", "[screen_reader][tracker]" )
 {
     screen_reader::tracker_cursor cursor;
     cursor.object = 2;
@@ -42,4 +42,24 @@ TEST_CASE( "tracker_items_wrap_without_changing_the_object", "[screen_reader][tr
     CHECK( cursor.item == 0 );
     cursor.cycle_objects( 1, 0 );
     CHECK( cursor.object == 0 );
+}
+
+TEST_CASE( "tracker_changing_to_a_shorter_category_keeps_selection_in_bounds",
+           "[screen_reader][tracker]" )
+{
+    screen_reader::tracker_cursor cursor;
+    // A category with several entries followed by a category with one entry.
+    cursor.cycle_items( -1, 5 );
+    REQUIRE( cursor.item == 4 );
+    cursor.cycle_objects( 1, 3 );
+    CHECK( cursor.object == 1 );
+    CHECK( cursor.item == 0 );
+    cursor.cycle_items( 1, 1 );
+    CHECK( cursor.object == 1 );
+    CHECK( cursor.item == 0 );
+    cursor.cycle_objects( -1, 3 );
+    CHECK( cursor.object == 0 );
+    cursor.cycle_objects( -1, 3 );
+    CHECK( cursor.object == 2 );
+    CHECK( cursor.item == 0 );
 }

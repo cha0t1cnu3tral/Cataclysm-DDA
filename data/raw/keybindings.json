@@ -8,25 +8,25 @@
   {
     "type": "keybinding",
     "id": "TRACKER_PREVIOUS_OBJECT",
-    "name": "Track previous visible object",
+    "name": "Previous tracker category or finder destination",
     "bindings": [ { "input_method": "keyboard_code", "key": "[", "mod": [ "ctrl" ] } ]
   },
   {
     "type": "keybinding",
     "id": "TRACKER_NEXT_OBJECT",
-    "name": "Track next visible object",
+    "name": "Next tracker category or finder destination",
     "bindings": [ { "input_method": "keyboard_code", "key": "]", "mod": [ "ctrl" ] } ]
   },
   {
     "type": "keybinding",
     "id": "TRACKER_PREVIOUS_ITEM",
-    "name": "Track previous item at this object",
+    "name": "Previous entry in tracker category",
     "bindings": [ { "input_method": "keyboard_code", "key": "[" } ]
   },
   {
     "type": "keybinding",
     "id": "TRACKER_NEXT_ITEM",
-    "name": "Track next item at this object",
+    "name": "Next entry in tracker category",
     "bindings": [ { "input_method": "keyboard_code", "key": "]" } ]
   },
   {

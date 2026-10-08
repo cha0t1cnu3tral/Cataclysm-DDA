@@ -36,12 +36,33 @@ namespace screen_reader
 {
 namespace
 {
+enum class object_category { ground_items, furniture, doors, stairs, vehicles, creatures };
+
+std::string category_name( object_category category )
+{
+    switch( category ) {
+        case object_category::ground_items:
+            return _( "Ground items" );
+        case object_category::furniture:
+            return _( "Furniture" );
+        case object_category::doors:
+            return _( "Doors" );
+        case object_category::stairs:
+            return _( "Stairs" );
+        case object_category::vehicles:
+            return _( "Vehicles" );
+        case object_category::creatures:
+            return _( "Creatures" );
+    }
+    return {};
+}
+
 struct tracked_object {
     tripoint_bub_ms position;
     std::string name;
-    std::vector<std::string> items;
     int distance;
     int approach_distance;
+    object_category category = object_category::ground_items;
 };
 struct walk_destination {
     tripoint_abs_ms position;
@@ -50,7 +71,7 @@ struct walk_destination {
 };
 std::optional<tripoint_abs_ms> selected_position;
 std::string selected_name;
-size_t selected_item = 0;
+object_category selected_category = object_category::ground_items;
 std::optional<walk_destination> walking;
 std::string walk_stop_reason;
 
@@ -110,14 +131,14 @@ std::vector<tracked_object> visible_objects( tracker_kind kind )
                 }
             }
             if( !exit_name.empty() ) {
-                objects.push_back( { p, exit_name + ": " + describe_tile( p ), {},
+                objects.push_back( { p, exit_name + ": " + describe_tile( p ),
                                      rl_dist( player.pos_bub(), p ), here.impassable( p ) ? 1 : 0 } );
             }
             continue;
         }
         if( kind == tracker_kind::hazards ) {
             if( here.can_see_trap_at( p, player ) || here.dangerous_field_at( p ) ) {
-                objects.push_back( { p, describe_tile( p ), {}, rl_dist( player.pos_bub(), p ), 1 } );
+                objects.push_back( { p, describe_tile( p ), rl_dist( player.pos_bub(), p ), 1 } );
             }
             continue;
         }
@@ -127,23 +148,26 @@ std::vector<tracked_object> visible_objects( tracker_kind kind )
                 items.push_back( object.display_name() );
             }
         }
-        std::string name;
-        if( here.has_furn( p ) ) {
-            name = here.furnname( p );
-        } else if( here.has_flag( ter_furn_flag::TFLAG_DOOR, p ) ||
-                   here.has_flag( ter_furn_flag::TFLAG_GOES_UP, p ) ||
-                   here.has_flag( ter_furn_flag::TFLAG_GOES_DOWN, p ) ) {
-            name = here.tername( p );
-        } else if( !items.empty() ) {
-            name = _( "Ground items" );
+        const int distance = rl_dist( player.pos_bub(), p );
+        const int approach = here.impassable( p ) ? 1 : 0;
+        // Every visible item gets its own entry, including items on furniture.
+        for( const std::string &name : items ) {
+            objects.push_back( { p, name, distance, approach, object_category::ground_items } );
         }
-        if( !name.empty() ) {
-            objects.push_back( { p, name, items, rl_dist( player.pos_bub(), p ), here.impassable( p ) ? 1 : 0 } );
+        if( here.has_furn( p ) ) {
+            objects.push_back( { p, here.furnname( p ), distance, approach, object_category::furniture } );
+        }
+        if( here.has_flag( ter_furn_flag::TFLAG_DOOR, p ) ) {
+            objects.push_back( { p, here.tername( p ), distance, approach, object_category::doors } );
+        }
+        if( here.has_flag( ter_furn_flag::TFLAG_GOES_UP, p ) ||
+            here.has_flag( ter_furn_flag::TFLAG_GOES_DOWN, p ) ) {
+            objects.push_back( { p, here.tername( p ), distance, approach, object_category::stairs } );
         }
         if( const optional_vpart_position vp = here.veh_at( p ) ) {
             const vehicle &veh = vp->vehicle();
             if( vehicles.insert( &veh ).second ) {
-                objects.push_back( { p, veh.name, items, rl_dist( player.pos_bub(), p ), 1 } );
+                objects.push_back( { p, veh.name, distance, 1, object_category::vehicles } );
             }
         }
     }
@@ -152,7 +176,7 @@ std::vector<tracked_object> visible_objects( tracker_kind kind )
             creature.pos_bub().z() == player.pos_bub().z() ) {
             objects.push_back( { creature.pos_bub(), creature.disp_name() + " " +
                                  Creature::get_attitude_ui_data( creature.attitude_to( player ) ).first.translated(),
-                                 {}, rl_dist( player.pos_bub(), creature.pos_bub() ), 1 } );
+                                 rl_dist( player.pos_bub(), creature.pos_bub() ), 1, object_category::creatures } );
         }
     }
     std::stable_sort( objects.begin(), objects.end(), []( const auto & a, const auto & b ) {
@@ -212,21 +236,64 @@ void object_tracker( int direction, bool items, tracker_kind kind )
     const std::vector<tracked_object> all_objects = objects;
     std::string filter;
     std::string selection_notice;
-    if( kind == tracker_kind::objects && selected_position ) {
-        for( size_t i = 0; i < objects.size(); ++i ) {
-            if( get_map().get_abs( objects[i].position ) == *selected_position &&
-                objects[i].name == selected_name ) {
-                cursor.object = i;
-                if( items ) {
-                    cursor.item = selected_item < objects[i].items.size() ? selected_item : 0;
-                    cursor.cycle_items( direction, objects[i].items.size() );
-                } else {
-                    cursor.cycle_objects( direction, objects.size() );
+    const bool categorized = kind == tracker_kind::objects;
+    std::vector<std::vector<size_t>> groups;
+    const auto regroup = [&]() {
+        groups.clear();
+        if( !categorized ) {
+            return;
+        }
+        for( const object_category category : {
+                 object_category::ground_items, object_category::furniture,
+                 object_category::doors, object_category::stairs, object_category::vehicles,
+                 object_category::creatures
+             } ) {
+            std::vector<size_t> entries;
+            for( size_t i = 0; i < objects.size(); ++i ) {
+                if( objects[i].category == category ) {
+                    entries.push_back( i );
                 }
-                break;
+            }
+            if( !entries.empty() ) {
+                groups.push_back( std::move( entries ) );
             }
         }
+    };
+    regroup();
+    if( categorized && selected_position ) {
+        for( size_t category = 0; category < groups.size(); ++category ) {
+            if( objects[groups[category].front()].category != selected_category ) {
+                continue;
+            }
+            cursor.object = category;
+            for( size_t entry = 0; entry < groups[category].size(); ++entry ) {
+                const tracked_object &object = objects[groups[category][entry]];
+                if( get_map().get_abs( object.position ) == *selected_position && object.name == selected_name ) {
+                    cursor.item = entry;
+                    break;
+                }
+            }
+            if( items ) {
+                cursor.cycle_items( direction, groups[cursor.object].size() );
+            } else {
+                cursor.cycle_objects( direction, groups.size() );
+            }
+            break;
+        }
     }
+    const auto current_object = [&]() -> const tracked_object & {
+        return objects[categorized ? groups[cursor.object][cursor.item] : cursor.object];
+    };
+    const auto summary = [&]() {
+        const tracked_object &object = current_object();
+        if( categorized ) {
+            return string_format( _( "Category %d of %d: %s. Entry %d of %d: %s. %s" ),
+                                  cursor.object + 1, groups.size(), category_name( object.category ),
+                                  cursor.item + 1, groups[cursor.object].size(), object.name, bearing( object.position ) );
+        }
+        return string_format( _( "Destination %d of %d: %s. %s" ),
+                              cursor.object + 1, objects.size(), object.name, bearing( object.position ) );
+    };
     catacurses::window window;
     ui_adaptor ui;
     ui.on_screen_resize( [&]( ui_adaptor & adaptor ) {
@@ -234,23 +301,20 @@ void object_tracker( int direction, bool items, tracker_kind kind )
         adaptor.position_from_window( window );
     } );
     ui.on_redraw( [&]( const ui_adaptor & ) {
-        const tracked_object &object = objects[cursor.object];
-        const std::string summary = string_format( _( "Object %d of %d: %s. %s" ),
-                                    cursor.object + 1, objects.size(), object.name, bearing( object.position ) );
-        const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
-                                      string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
-                                          object.items[cursor.item] );
+        const std::string selection_text = summary();
         werase( window );
         draw_border( window );
         center_print( window, 0, c_white,
                       kind == tracker_kind::exits ? _( "Exit finder: stairs, doors, and outdoors" ) :
                       kind == tracker_kind::hazards ? _( "Hazard finder" ) : _( "Object tracker" ) );
-        fold_and_print( window, point( 2, 2 ), getmaxx( window ) - 4, c_white, summary );
-        fold_and_print( window, point( 2, 6 ), getmaxx( window ) - 4, c_white, item_text );
+        fold_and_print( window, point( 2, 2 ), getmaxx( window ) - 4, c_white, selection_text );
         fold_and_print( window, point( 2, 10 ), getmaxx( window ) - 4, c_light_gray,
-                        _( "Control+[ / Control+]: previous / next object. [ / ]: previous / next item. Slash: search by object or item name. Enter: auto-walk to the selected object. Escape: close. Browsing uses no turns." ) );
+                        categorized ?
+                        _( "Control+[ / Control+]: previous / next category. [ / ]: previous / next entry in this category. Slash: search by name. Enter: auto-walk to the selected entry. Escape: close. Browsing uses no turns." )
+                        :
+                        _( "Control+[ / Control+]: previous / next destination. Slash: search by name. Enter: auto-walk to the selected destination. Escape: close. Browsing uses no turns." ) );
         wnoutrefresh( window );
-        text( summary + ". " + item_text, true );
+        text( selection_text, true );
     } );
     ui.mark_resize();
     input_context ctxt( "SCREEN_READER_TRACKER", keyboard_mode::keycode );
@@ -264,17 +328,15 @@ void object_tracker( int direction, bool items, tracker_kind kind )
     ctxt.register_action( "FILTER" );
     bool announce_selection = true;
     while( enabled() ) {
-        selected_position = get_map().get_abs( objects[cursor.object].position );
-        selected_name = objects[cursor.object].name;
-        selected_item = cursor.item;
+        if( categorized ) {
+            const tracked_object &object = current_object();
+            selected_position = get_map().get_abs( object.position );
+            selected_name = object.name;
+            selected_category = object.category;
+        }
         ui_manager::redraw();
         if( announce_selection ) {
-            const tracked_object &object = objects[cursor.object];
-            const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
-                                          string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
-                                              object.items[cursor.item] );
-            const std::string selection = selection_notice + string_format( _( "Object %d of %d: %s. %s. %s" ),
-                                          cursor.object + 1, objects.size(), object.name, bearing( object.position ), item_text );
+            const std::string selection = selection_notice + summary();
             DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker selection: " << selection;
             // Navigation must speak even when a renderer skips a frame, the
             // UI snapshot has not changed, or an empty item list is selected.
@@ -286,12 +348,14 @@ void object_tracker( int direction, bool items, tracker_kind kind )
         if( action == "QUIT" ) {
             return;
         } else if( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ) {
-            cursor.cycle_objects( action == "TRACKER_PREVIOUS_OBJECT" ? -1 : 1, objects.size() );
+            cursor.cycle_objects( action == "TRACKER_PREVIOUS_OBJECT" ? -1 : 1,
+                                  categorized ? groups.size() : objects.size() );
             announce_selection = true;
         } else if( action == "TRACKER_PREVIOUS_ITEM" || action == "TRACKER_NEXT_ITEM" ) {
-            cursor.cycle_items( action == "TRACKER_PREVIOUS_ITEM" ? -1 : 1,
-                                objects[cursor.object].items.size() );
-            announce_selection = true;
+            if( categorized ) {
+                cursor.cycle_items( action == "TRACKER_PREVIOUS_ITEM" ? -1 : 1, groups[cursor.object].size() );
+                announce_selection = true;
+            }
         } else if( action == "FILTER" ) {
             string_input_popup_imgui popup( FULL_SCREEN_WIDTH, filter );
             popup.set_label( _( "Search visible objects and ground items:" ) );
@@ -301,10 +365,7 @@ void object_tracker( int direction, bool items, tracker_kind kind )
             if( !popup.cancelled() ) {
                 std::vector<tracked_object> matches;
                 for( const tracked_object &object : all_objects ) {
-                    if( query.empty() || lcmatch( object.name, query ) ||
-                    std::any_of( object.items.begin(), object.items.end(), [&]( const std::string & item ) {
-                    return lcmatch( item, query );
-                    } ) ) {
+                    if( query.empty() || lcmatch( object.name, query ) ) {
                         matches.push_back( object );
                     }
                 }
@@ -314,11 +375,12 @@ void object_tracker( int direction, bool items, tracker_kind kind )
                     objects = std::move( matches );
                     filter = query;
                     cursor = {};
+                    regroup();
                 }
                 announce_selection = true;
             }
         } else if( action == "CONFIRM" ) {
-            const tracked_object &object = objects[cursor.object];
+            const tracked_object &object = current_object();
             bool reported = false;
             const auto route = g->safe_route_to( get_avatar(), object.position, object.approach_distance,
             [&]( const std::string & message ) {
@@ -327,7 +389,7 @@ void object_tracker( int direction, bool items, tracker_kind kind )
             } );
             if( route && !route->empty() ) {
                 get_avatar().set_destination( *route );
-                walking = walk_destination{ *selected_position, object.name, object.approach_distance };
+                walking = walk_destination{ get_map().get_abs( object.position ), object.name, object.approach_distance };
                 walk_stop_reason.clear();
                 announce( string_format(
                               _( "Auto-walking toward %s. Normal safe-mode and interruption rules apply." ),

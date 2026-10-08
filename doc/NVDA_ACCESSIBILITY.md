@@ -24,9 +24,9 @@ the game is foreground on the normal Windows desktop.
 | Control+Shift+F5 | Exit finder: browse stairs, doors, and outdoor destinations |
 | Control+Shift+F4 | Hazard finder: browse visible known traps and dangerous fields |
 | Control+Shift+F6 | Read the complete character stats report without opening a menu |
-| Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next object inside it |
-| [ / ] | Open the tracker from gameplay; browse previous/next visible ground item at the selected object |
-| Enter / Escape | Inside the tracker, start auto-walking to the selected object / close without walking |
+| Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next category inside it |
+| [ / ] | Open the tracker from gameplay; browse previous/next entry within the selected category |
+| Enter / Escape | Inside the tracker, start auto-walking to the selected entry / close without walking |
 
 The commands besides the toggle apply only while screen reader mode is enabled.
 Reading and reviewing do not consume game turns. The surroundings and status
@@ -34,11 +34,22 @@ lists use the usual list controls: up/down, filtering, and Escape to return.
 
 ## Maps and gameplay
 
-The object tracker lists visible furniture, doors, stairs, ground-item piles,
-vehicles (once each, at the nearest visible part), and creatures on the current
-level, ordered nearest first. It announces the selected object's bearing and the
-selected item's name and quantity. Object and item browsing wrap independently;
-switching objects resets the item selection. Slash opens a search by object or ground-item name; an empty search restores all visible objects. Searches never expose hidden objects. Browsing does not consume turns.
+The object tracker has six categories: Ground items, Furniture, Doors, Stairs,
+Vehicles, and Creatures. Only categories with visible entries on the current
+level appear. Control+[ and Control+] switch categories; [ and ] browse entries
+within the current category. Both wrap. Switching categories selects its first
+entry. Entries are ordered nearest first and announce the category, entry
+number, name or item quantity, and compass offsets. Each visible ground item
+has its own entry, including items on furniture. Vehicles appear once, at their
+nearest visible part. Enter auto-walks to the selected entry; for ground items
+this approaches the item's location without picking it up.
+
+Slash searches names across all categories. A successful search rebuilds the
+categories using only matching visible entries and resets selection to the
+first match. An empty search restores the full list. A search with no matches
+keeps the previous list and announces that there were no matches. Reopening the
+tracker remembers its category and entry when still visible. Finder selections
+do not replace the object tracker's remembered selection. Browsing costs no turns.
 In screen reader mode, these four shortcuts take priority over conflicting
 gameplay bindings. Other menus and text entry retain their bracket controls.
 Both character and keycode keyboard input are supported. Turning screen reader
@@ -48,7 +59,7 @@ Enter uses the game's existing safe auto-move route. Accessible targets are
 approached directly; impassable objects, vehicles, and creatures are approached
 to within one tile. Unreachable routes are reported without moving. Walking uses
 normal turns, safe-mode interruptions, and cancellation controls. Selecting an
-item walks to its object's location; it does not automatically pick it up.
+item walks to the item's location; it does not automatically pick it up.
 The game announces arrival or a stopped route. Moving creatures are tracked to
 their selected location rather than chased. Turning screen reader mode off closes
 the tracker. No tracker controls are registered in normal visual mode.
@@ -133,9 +144,8 @@ checks. It never disarms a trap or deliberately steps onto the selected hazard.
 This list is a snapshot, not a guarantee that an area is safe; unseen hazards
 remain hidden and hazards may change after a turn.
 
-Both finders use the tracker controls: Control+[ / Control+] browse targets,
-slash searches descriptions, Enter approaches, and Escape closes. Brackets
-review ground items (these focused lists have no item entries). Browsing costs
+Both finders share the walking system but have destination controls: Control+[ / Control+] browse targets,
+slash searches descriptions, Enter approaches, and Escape closes. Plain brackets do not change these destination lists. Browsing costs
 no turns. Control+Shift+F11 reads the finder title and instructions. These
 shortcuts and all new dialog announcements are active only in screen reader
 mode. Turning the mode off closes an open finder.
