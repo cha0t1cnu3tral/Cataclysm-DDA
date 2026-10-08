@@ -146,6 +146,9 @@ void status( bool read_all )
     avatar &player = get_avatar();
     uilist menu;
     menu.title = _( "Character stats" );
+    const std::string hunger = display::hunger_text_color( player ).first;
+    const std::string thirst = display::thirst_text_color( player ).first;
+    const std::string sleepiness = display::sleepiness_text_color( player ).first;
     std::vector<std::string> stats = {
         string_format( _( "Strength: %d, base %d" ), player.get_str(), player.get_str_base() ),
         string_format( _( "Dexterity: %d, base %d" ), player.get_dex(), player.get_dex_base() ),
@@ -155,8 +158,9 @@ void status( bool read_all )
         string_format( _( "Speed: %d. Focus: %d. Morale: %d" ), player.get_speed(),
                        player.get_focus(), player.get_morale_level() ),
         string_format( _( "Hunger: %s. Thirst: %s. Sleepiness: %s. Pain: %d" ),
-                       display::hunger_text_color( player ).first, display::thirst_text_color( player ).first,
-                       display::sleepiness_text_color( player ).first, player.get_perceived_pain() ),
+                       hunger.empty() ? _( "Not hungry" ) : hunger,
+                       thirst.empty() ? _( "Not thirsty" ) : thirst,
+                       sleepiness.empty() ? _( "Not tired" ) : sleepiness, player.get_perceived_pain() ),
         string_format( _( "Weariness: %s. Radiation: %d" ),
                        display::weariness_text_color( player ).first, player.get_rad() ),
         string_format( _( "Bionic power: %d of %d kilojoules" ),
