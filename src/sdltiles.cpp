@@ -5814,6 +5814,17 @@ static void CheckMessages()
                 case CATA_KEYDOWN: {
 #if defined(_WIN32)
                     const auto reader_key = GetKeysym( ev );
+                    const input_context *reader_context = input_context::input_context_stack.back();
+                    if( screen_reader::enabled() && reader_context &&
+                        reader_context->is_registered_action( "TRACKER_NEXT_OBJECT" ) &&
+                        ( reader_key.sym == '[' || reader_key.sym == ']' ) &&
+                        ( reader_key.mod & KMOD_CTRL ) &&
+                        !( reader_key.mod & ( KMOD_ALT | KMOD_SHIFT ) ) ) {
+                        // Character input discards modifiers and can turn Ctrl+[
+                        // into Escape. Preserve the physical event for the tracker.
+                        last_input = sdl_keysym_to_keycode_evt( reader_key );
+                        break;
+                    }
                     if( ( reader_key.mod & KMOD_CTRL ) && ( reader_key.mod & KMOD_SHIFT ) &&
                         !( reader_key.mod & KMOD_ALT ) ) {
                         const bool reader_command = reader_key.sym == SDLK_F12 ||

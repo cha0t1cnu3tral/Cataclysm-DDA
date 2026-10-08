@@ -38,6 +38,8 @@
 #include "translations.h"
 #include "ui_manager.h"
 #include "sdl_gamepad.h"
+#include "screen_reader.h"
+#include "screen_reader_tracker.h"
 
 enum class kb_menu_status {
     remove, reset, add, add_global, execute, show, filter
@@ -146,6 +148,20 @@ static const std::string TIMEOUT = "TIMEOUT";
 
 const std::string &input_context::input_to_action( const input_event &inp ) const
 {
+    // Reserve tracker shortcuts only in contexts that explicitly register them.
+    // This also takes priority over existing bracket bindings without editing
+    // the player's keybindings or affecting text entry and other menus.
+    if( screen_reader::enabled() && !inp.sequence.empty() &&
+        ( inp.type == input_event_t::keyboard_code || inp.type == input_event_t::keyboard_char ) ) {
+        const std::string tracker_action = screen_reader::tracker_key_action( inp.sequence.front(),
+                                           inp.modifiers.count( keymod_t::ctrl ), inp.modifiers.count( keymod_t::alt ),
+                                           inp.modifiers.count( keymod_t::shift ) );
+        const auto found = std::find( registered_actions.begin(), registered_actions.end(),
+                                      tracker_action );
+        if( !tracker_action.empty() && found != registered_actions.end() ) {
+            return *found;
+        }
+    }
     for( const std::string &elem : registered_actions ) {
         const std::string &action = elem;
         const std::vector<input_event> &check_inp = inp_mngr.get_input_for_action( action, category );

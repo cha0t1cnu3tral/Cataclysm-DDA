@@ -275,6 +275,8 @@ input_context game::get_player_input( std::string &action )
     if( screen_reader::enabled() && uquit != QUIT_WATCH ) {
         ctxt.register_action( "TRACKER_PREVIOUS_OBJECT" );
         ctxt.register_action( "TRACKER_NEXT_OBJECT" );
+        ctxt.register_action( "TRACKER_PREVIOUS_ITEM" );
+        ctxt.register_action( "TRACKER_NEXT_ITEM" );
     }
 
     here.update_visibility_cache( pos.z() );
@@ -3196,8 +3198,12 @@ bool game::handle_action()
         // No auto-move, ask player for input
         ctxt = get_player_input( action );
         if( screen_reader::enabled() &&
-            ( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ) ) {
-            screen_reader::object_tracker( action == "TRACKER_PREVIOUS_OBJECT" ? -1 : 1 );
+            ( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ||
+              action == "TRACKER_PREVIOUS_ITEM" || action == "TRACKER_NEXT_ITEM" ) ) {
+            const bool items = action == "TRACKER_PREVIOUS_ITEM" || action == "TRACKER_NEXT_ITEM";
+            const int direction = action == "TRACKER_PREVIOUS_OBJECT" ||
+                                  action == "TRACKER_PREVIOUS_ITEM" ? -1 : 1;
+            screen_reader::object_tracker( direction, items );
             // Return to the normal turn loop so a newly set destination starts
             // immediately, without injecting a movement key or spending a turn.
             return false;

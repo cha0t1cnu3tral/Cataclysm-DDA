@@ -46,6 +46,7 @@ struct walk_destination {
 };
 std::optional<tripoint_abs_ms> selected_position;
 std::string selected_name;
+size_t selected_item = 0;
 std::optional<walk_destination> walking;
 
 std::string bearing( const tripoint_bub_ms &position )
@@ -141,7 +142,7 @@ void update_tracker_walk()
               _( "Auto-walk stopped before reaching the target." ), true );
 }
 
-void object_tracker( int direction )
+void object_tracker( int direction, bool items )
 {
     if( !enabled() || !g || !g->w_terrain ) {
         return;
@@ -157,7 +158,12 @@ void object_tracker( int direction )
             if( get_map().get_abs( objects[i].position ) == *selected_position &&
                 objects[i].name == selected_name ) {
                 cursor.object = i;
-                cursor.cycle_objects( direction, objects.size() );
+                if( items ) {
+                    cursor.item = selected_item < objects[i].items.size() ? selected_item : 0;
+                    cursor.cycle_items( direction, objects[i].items.size() );
+                } else {
+                    cursor.cycle_objects( direction, objects.size() );
+                }
                 break;
             }
         }
@@ -197,6 +203,7 @@ void object_tracker( int direction )
     while( enabled() ) {
         selected_position = get_map().get_abs( objects[cursor.object].position );
         selected_name = objects[cursor.object].name;
+        selected_item = cursor.item;
         ui_manager::redraw();
         const std::string action = ctxt.handle_input( 100 );
         if( action == "QUIT" ) {

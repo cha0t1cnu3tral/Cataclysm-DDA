@@ -22,7 +22,7 @@ the game is foreground on the normal Windows desktop.
 | Control+Shift+F8 | Open a text list of adjacent tiles and visible creatures |
 | Control+Shift+F7 | Open numerical character health and condition information |
 | Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next object inside it |
-| [ / ] | Inside the tracker, browse previous/next visible ground item at the selected object |
+| [ / ] | Open the tracker from gameplay; browse previous/next visible ground item at the selected object |
 | Enter / Escape | Inside the tracker, start auto-walking to the selected object / close without walking |
 
 The commands besides the toggle apply only while screen reader mode is enabled.
@@ -36,7 +36,10 @@ vehicles (once each, at the nearest visible part), and creatures on the current
 level, ordered nearest first. It announces the selected object's bearing and the
 selected item's name and quantity. Object and item browsing wrap independently;
 switching objects resets the item selection. Browsing does not consume turns.
-The plain bracket keys retain their existing controls outside the tracker.
+In screen reader mode, these four shortcuts take priority over conflicting
+gameplay bindings. Other menus and text entry retain their bracket controls.
+Both character and keycode keyboard input are supported. Turning screen reader
+mode off restores the existing gameplay bindings.
 
 Enter uses the game's existing safe auto-move route. Accessible targets are
 approached directly; impassable objects, vehicles, and creatures are approached
