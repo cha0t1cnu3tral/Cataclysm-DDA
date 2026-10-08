@@ -115,7 +115,7 @@ Menu navigation speaks the selected option and its state, rather than reading ev
 
 Movement speech describes the current tile without rereading the sidebar. Game messages still speak as they occur. Control+Shift+F6 reads current/base attributes, stamina, speed, focus, morale, needs, pain, weariness, radiation, bionic power, and body-part health. Control+Shift+F7 opens the same stats as a browsable list. Neither stats command consumes a turn.
 
-Confirmation dialogs speak the current Yes, No, or other button with its key hint. Left/Right changes the spoken selection; hovering a button reads it too. Activating a button by Enter, mouse click, or its shortcut announces the chosen response. This applies only in screen reader mode.
+Confirmation dialogs first speak the question and then the current Yes, No, or other button with its key hint. Changing the selection reads the button without repeating the question. Left/Right changes the spoken selection; hovering a button reads it too. Activating a button by Enter, mouse click, or its shortcut announces the chosen response. This applies only in screen reader mode.
 
 ## Exit and hazard finders
 
@@ -146,9 +146,9 @@ The Windows tiles build passed with warnings treated as errors. The existing
 screen reader regression executable passed 53 assertions in 10 cases. A live
 NVDA test using copied saves delivered outdoor-boundary and downward-staircase
 selections, started a staircase auto-walk, reported an interrupted walk, and
-reported an empty hazard list. Controller calls returned success. Actual arrival
-at stairs/outdoors, populated hazard lists, and the new confirmation selection
-and activation speech still need listening verification. Visual screenshot
+reported an empty hazard list. Controller calls returned success. The later safe-mode follow-up test verified outdoor arrival, recovery from a
+safe-mode block, and use of the normal Ignore Enemy command. Staircase arrival,
+populated hazard lists, and confirmation speech still need listening verification. Visual screenshot
 capture was black in this test session; no visual validation is claimed.
 
 ### Stopping accessible auto-walking
@@ -168,3 +168,10 @@ previous tile and stops automatically. It does not open the graphical peek
 screen. Manual movement uses a spoken Yes/No confirmation: Yes keeps the new
 position and ignores the newly spotted enemies; No or Escape returns to the
 previous tile. No is selected initially. Normal visual mode keeps its peek UI.
+
+Safe-mode follow-up validation: the copied-save test encountered a zombie
+33 tiles southwest, canceled the outdoor route with spoken recovery bindings,
+accepted the Ignore Enemy command, then completed an outdoor route and delivered
+its arrival report after position speech. A second newly revealed zombie exposed
+the graphical autopeek screen; the subsequent change replaces that screen as
+described above. These traces verify controller delivery, not human listening.

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <memory>
 
 #include "cached_options.h"
@@ -57,6 +58,11 @@ void query_popup_impl::draw_controls()
 {
     ImGui::SetNavCursorVisible( true );
     mouse_selected_option = -1;
+    if( screen_reader::enabled() ) {
+        // Read the question once before its selected response. Subsequent
+        // selection changes should not repeat the complete prompt.
+        screen_reader::narration( parent->text, this, std::hash<std::string>{}( parent->text ) );
+    }
 
     for( const std::string &line : parent->folded_msg ) {
         cataimgui::draw_colored_text( line, parent->default_text_color );
