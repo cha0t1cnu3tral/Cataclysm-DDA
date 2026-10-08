@@ -2840,11 +2840,9 @@ void character_creator_ui_impl::draw_controls()
         _( "Scenario" ), _( "Profession" ), _( "Background" ), _( "Stats" ),
         _( "Traits" ), _( "Skills" ), _( "Summary" )
     };
-    const input_context &input = ui_parent->get_current_tab_input();
     screen_reader::narration( string_format(
-                                  _( "Character creator. %s tab. %s: next tab. %s: previous tab. Up and down browse choices. Enter selects. Plus and minus change stats or skills. F2 opens character details and editing controls. Control Shift F11 reads details; Control Shift up and down reviews them. %s: change name. On Summary, next tab finishes creation." ),
-                                  tab_names[cc_uistate.selected_tab], input.get_desc( "NEXT_TAB" ),
-                                  input.get_desc( "PREV_TAB" ), input.get_desc( "CHANGE_NAME" ) ),
+                                  _( "Character creator. %s tab. F2 opens details and keyboard help." ),
+                                  tab_names[cc_uistate.selected_tab] ),
                               this, static_cast<size_t>( cc_uistate.selected_tab ) );
 }
 
@@ -3439,6 +3437,10 @@ bool character_creator_ui::handle_action( const std::string &action )
 {
     restore_on_out_of_scope previous_handling( handling_action );
     handling_action = true;
+    if( screen_reader::enabled() && action == "CHARACTER_CREATOR_GUIDE" ) {
+        popup( _( "Character creator keyboard help\n\nTab: next tab. Shift Tab: previous tab. Up and down: browse choices. Enter: select or toggle. Plus and minus: change stats or skills. F2: character details and editing. Control Shift F11: read the full screen and description. Control Shift up and down: review text line by line. On Summary, Tab opens the finish confirmation. Escape returns to the main menu after confirmation." ) );
+        return true;
+    }
     if( screen_reader::enabled() && action == "CHARACTER_CREATOR_INFO" ) {
         const avatar &player = get_avatar();
         std::vector<std::pair<std::string, std::string>> fields = {
@@ -3454,7 +3456,8 @@ bool character_creator_ui::handle_action( const std::string &action )
             { "RESET_CALENDAR", _( "Reset calendar" ) },
             { "RANDOMIZE_CHAR_NAME", _( "Randomize name" ) },
             { "RANDOMIZE_CHAR_DESCRIPTION", _( "Randomize description" ) },
-            { "SAVE_TEMPLATE", _( "Save character template" ) }
+            { "SAVE_TEMPLATE", _( "Save character template" ) },
+            { "CHARACTER_CREATOR_GUIDE", _( "Read character creator keyboard help" ) }
         };
         if( get_option<bool>( "SELECT_STARTING_CITY" ) ) {
             fields.emplace_back( "CHOOSE_CITY", _( "Choose starting city" ) );

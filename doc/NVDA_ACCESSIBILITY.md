@@ -87,7 +87,7 @@ Character creation uses Tab and Shift+Tab to switch tabs, Up/Down to browse,
 Enter to choose or toggle, and plus/minus to adjust stats and skills. F2 opens
 a keyboard list of name, gender, outfit, age, height, blood type, starting
 location, calendar, randomization, and template controls. Current values and
-selected states are spoken. Control+Shift+F11 reads the detail panel as well as
+selected states are spoken. Tab announcements are brief; the F2 menu includes keyboard help on demand. Control+Shift+F11 reads the detail panel as well as
 the list; line review includes scenario/profession descriptions and summary
 information. On Summary, Tab opens the finish confirmation.
 
