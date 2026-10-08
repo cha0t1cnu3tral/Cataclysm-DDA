@@ -582,7 +582,7 @@ bool avatar_action::move( avatar &you, map &m, const tripoint_rel_ms &d )
                 if( screen_reader::enabled() ) {
                     if( !stopped_walk ) {
                         move_anyway = query_popup().context( "YESNO" )
-                                      .message( _( "Safe mode spotted a new enemy after this move. Move anyway? Yes keeps this position and ignores the spotted enemies. No or Escape returns to the previous tile." ) )
+                                      .message( "%s", _( "Safe mode spotted a new enemy after this move. Move anyway? Yes keeps this position and ignores the spotted enemies. No or Escape returns to the previous tile." ) )
                                       .option( "YES" ).option( "NO" ).cursor( 1 ).allow_cancel( true )
                                       .query().action == "YES";
                     }
