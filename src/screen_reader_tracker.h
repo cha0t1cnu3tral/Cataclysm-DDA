@@ -16,7 +16,7 @@ std::string tracker_key_action( int key, bool control, bool alt, bool shift );
 enum class tracker_kind { objects, exits, hazards };
 void object_tracker( int direction, bool items = false, tracker_kind kind = tracker_kind::objects );
 void update_tracker_walk();
-void cancel_tracker_walk( const std::string &reason );
+bool cancel_tracker_walk( const std::string &reason );
 bool tracker_walk_active();
 }
 #endif

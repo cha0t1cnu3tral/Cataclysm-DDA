@@ -1,4 +1,6 @@
 #include "avatar_action.h"
+#include "screen_reader.h"
+#include "screen_reader_tracker.h"
 
 #include <algorithm>
 #include <climits>
@@ -571,19 +573,37 @@ bool avatar_action::move( avatar &you, map &m, const tripoint_rel_ms &d )
             here.update_visibility_cache( dest_loc.z() );
             g->mon_info_update();
             if( !g->check_safe_mode_allowed() && !you.is_hauling() ) {
-                input_context ctxt( "LOOK" );
-                static_popup popup;
-                popup.message( "%s " + colorize( _( "to go back." ), c_light_gray ) +
-                               "\n%s " + colorize( _( "to move anyway." ), c_light_gray ),
-                               ctxt.get_desc( "QUIT" ),
-                               ctxt.get_desc( "CONFIRM" ) ).on_top( true );
-                ui_manager::redraw();
-                // Get bub coords again after build_map_cache
+                // Get bub coords again after build_map_cache.
                 const tripoint_bub_ms src_loc = here.get_bub( old_abs_pos );
-                tripoint_bub_ms center( src_loc.x(), src_loc.y(), dest_loc.z() );
-                const look_around_result result = g->look_around( false, center, center, false, false, true );
-                if( result.peek_action != PA_MOVE ) {
+                const bool stopped_walk = screen_reader::cancel_tracker_walk( string_format(
+                        _( "Auto-walk stopped after spotting a new enemy. Returned to the previous tile. You are back in control. %s to ignore the enemy, or %s to turn safe mode off." ),
+                        press_x( ACTION_IGNORE_ENEMY ), press_x( ACTION_TOGGLE_SAFEMODE ) ) );
+                bool move_anyway = false;
+                if( screen_reader::enabled() ) {
+                    if( !stopped_walk ) {
+                        move_anyway = query_popup().context( "YESNO" )
+                                      .message( _( "Safe mode spotted a new enemy after this move. Move anyway? Yes keeps this position and ignores the spotted enemies. No or Escape returns to the previous tile." ) )
+                                      .option( "YES" ).option( "NO" ).cursor( 1 ).allow_cancel( true )
+                                      .query().action == "YES";
+                    }
+                } else {
+                    input_context ctxt( "LOOK" );
+                    static_popup popup;
+                    popup.message( "%s " + colorize( _( "to go back." ), c_light_gray ) +
+                                   "\n%s " + colorize( _( "to move anyway." ), c_light_gray ),
+                                   ctxt.get_desc( "QUIT" ),
+                                   ctxt.get_desc( "CONFIRM" ) ).on_top( true );
+                    ui_manager::redraw();
+                    tripoint_bub_ms center( src_loc.x(), src_loc.y(), dest_loc.z() );
+                    const look_around_result result = g->look_around( false, center, center, false, false, true );
+                    move_anyway = result.peek_action == PA_MOVE;
+                }
+                if( !move_anyway ) {
                     g->walk_move( src_loc, via_ramp );
+                    if( stopped_walk ) {
+                        g->invalidate_main_ui_adaptor();
+                        ui_manager::redraw();
+                    }
                 } else {
                     add_msg( m_info, _( "Ignoring enemy!" ) );
                     for( auto &elem : you.get_mon_visible().new_seen_mon ) {

@@ -167,14 +167,15 @@ bool tracker_walk_active()
     return walking.has_value() && get_avatar().has_destination();
 }
 
-void cancel_tracker_walk( const std::string &reason )
+bool cancel_tracker_walk( const std::string &reason )
 {
     if( !enabled() || !walking ) {
-        return;
+        return false;
     }
     get_avatar().abort_automove();
     walk_stop_reason = reason;
     g->invalidate_main_ui_adaptor();
+    return true;
 }
 
 void update_tracker_walk()

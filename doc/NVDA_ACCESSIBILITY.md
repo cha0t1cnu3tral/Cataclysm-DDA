@@ -162,3 +162,9 @@ change it. The warning is a movement restriction, not a dialog to dismiss:
 other game commands remain available after the route is canceled. Arrival and
 stop reports are delivered after frame speech so position text cannot cut them
 off in the same frame. This behavior applies only in screen reader mode.
+
+When a move reveals a new enemy, screen reader auto-walking returns to the
+previous tile and stops automatically. It does not open the graphical peek
+screen. Manual movement uses a spoken Yes/No confirmation: Yes keeps the new
+position and ignores the newly spotted enemies; No or Escape returns to the
+previous tile. No is selected initially. Normal visual mode keeps its peek UI.
