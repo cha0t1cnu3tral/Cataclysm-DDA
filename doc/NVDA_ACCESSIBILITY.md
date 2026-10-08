@@ -150,3 +150,15 @@ reported an empty hazard list. Controller calls returned success. Actual arrival
 at stairs/outdoors, populated hazard lists, and the new confirmation selection
 and activation speech still need listening verification. Visual screenshot
 capture was black in this test session; no visual validation is claimed.
+
+### Stopping accessible auto-walking
+
+In screen reader mode, Escape or the normal Pause command cancels a tracker or
+finder auto-walk immediately, without a confirmation. Safe-mode movement blocks
+also cancel these routes and return to normal gameplay input. The game speaks
+that walking stopped and gives the current bindings for ignoring the spotted
+enemy or switching safe mode off. Safe mode stays enabled until you choose to
+change it. The warning is a movement restriction, not a dialog to dismiss:
+other game commands remain available after the route is canceled. Arrival and
+stop reports are delivered after frame speech so position text cannot cut them
+off in the same frame. This behavior applies only in screen reader mode.

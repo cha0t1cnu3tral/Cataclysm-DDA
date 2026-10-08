@@ -2470,6 +2470,10 @@ bool game::handle_mouseview( input_context &ctxt, std::string &action )
         }
     } while( action == "MOUSE_MOVE" ); // Freeze animation when moving the mouse
 
+    if( screen_reader::enabled() && screen_reader::tracker_walk_active() ) {
+        liveview.hide();
+        return false;
+    }
     if( action != "TIMEOUT" ) {
         // Keyboard event, break out of animation loop
         liveview.hide();
@@ -3393,9 +3397,6 @@ void game::draw( ui_adaptor &ui )
     // Only draw blinking symbols when in active phase
     if( blink_active_phase ) {
         draw_blink_curses();
-    }
-    if( screen_reader::enabled() ) {
-        screen_reader::update_tracker_walk();
     }
     if( screen_reader::enabled() && !screen_reader::tracker_walk_active() ) {
         const tripoint_abs_ms location = get_map().get_abs( u.pos_bub() );

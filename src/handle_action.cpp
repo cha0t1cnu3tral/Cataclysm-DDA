@@ -3176,6 +3176,14 @@ bool game::handle_action()
     avatar &player_character = get_avatar();
     // Check if we have an auto-move destination
     if( player_character.has_destination() ) {
+        if( screen_reader::enabled() && screen_reader::tracker_walk_active() &&
+            !check_safe_mode_allowed( false ) ) {
+            screen_reader::cancel_tracker_walk( string_format(
+                    _( "Auto-walk stopped by safe mode. You are back in control. %s to ignore the spotted enemy, or %s to turn safe mode off. You can use other game commands or choose a different destination." ),
+                    press_x( ACTION_IGNORE_ENEMY ), press_x( ACTION_TOGGLE_SAFEMODE ) ) );
+            ui_manager::redraw();
+            return false;
+        }
         act = player_character.get_next_auto_move_direction();
         if( act == ACTION_NULL ) {
             add_msg( m_info, _( "Auto-move canceled" ) );
@@ -3183,6 +3191,9 @@ bool game::handle_action()
             return false;
         }
         handle_key_blocking_activity();
+        if( screen_reader::enabled() && !player_character.has_destination() ) {
+            return false;
+        }
     } else if( player_character.has_destination_activity() ) {
         // starts destination activity after the player successfully reached his destination
         player_character.start_destination_activity();
@@ -3197,6 +3208,11 @@ bool game::handle_action()
     } else {
         // No auto-move, ask player for input
         ctxt = get_player_input( action );
+        // Global finder shortcuts can set a route while this input context is
+        // waiting. Start it on the next loop instead of clearing it as input.
+        if( screen_reader::enabled() && screen_reader::tracker_walk_active() ) {
+            return false;
+        }
         if( screen_reader::enabled() &&
             ( action == "TRACKER_PREVIOUS_OBJECT" || action == "TRACKER_NEXT_OBJECT" ||
               action == "TRACKER_PREVIOUS_ITEM" || action == "TRACKER_NEXT_ITEM" ) ) {

@@ -1,4 +1,5 @@
 #include "screen_reader.h"
+#include "screen_reader_tracker.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -317,6 +318,9 @@ void finish_frame()
     if( !frame.empty() ) {
         review_index = std::min( review_index, frame.size() - 1 );
     }
+    // Deliver arrival/interruption after this frame's speech, so a changed
+    // position or menu cannot immediately cancel the walking report.
+    update_tracker_walk();
 }
 
 void capture_window( const catacurses::window &window )

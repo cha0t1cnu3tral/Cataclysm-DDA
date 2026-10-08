@@ -52,6 +52,7 @@ std::optional<tripoint_abs_ms> selected_position;
 std::string selected_name;
 size_t selected_item = 0;
 std::optional<walk_destination> walking;
+std::string walk_stop_reason;
 
 std::string bearing( const tripoint_bub_ms &position )
 {
@@ -163,7 +164,17 @@ std::vector<tracked_object> visible_objects( tracker_kind kind )
 
 bool tracker_walk_active()
 {
-    return walking.has_value();
+    return walking.has_value() && get_avatar().has_destination();
+}
+
+void cancel_tracker_walk( const std::string &reason )
+{
+    if( !enabled() || !walking ) {
+        return;
+    }
+    get_avatar().abort_automove();
+    walk_stop_reason = reason;
+    g->invalidate_main_ui_adaptor();
 }
 
 void update_tracker_walk()
@@ -175,8 +186,11 @@ void update_tracker_walk()
     walking.reset();
     const bool reached = rl_dist( get_avatar().pos_bub(), get_map().get_bub( destination.position ) ) <=
                          destination.approach_distance;
-    announce( reached ? string_format( _( "Reached the location of %s." ), destination.name ) :
-              _( "Auto-walk stopped before reaching the target." ), true );
+    const std::string report = !walk_stop_reason.empty() ? walk_stop_reason :
+                               reached ? string_format( _( "Reached the location of %s." ), destination.name ) :
+                               _( "Auto-walk stopped before reaching the target. You are back in control." );
+    walk_stop_reason.clear();
+    announce( report, true );
 }
 
 void object_tracker( int direction, bool items, tracker_kind kind )
@@ -313,6 +327,7 @@ void object_tracker( int direction, bool items, tracker_kind kind )
             if( route && !route->empty() ) {
                 get_avatar().set_destination( *route );
                 walking = walk_destination{ *selected_position, object.name, object.approach_distance };
+                walk_stop_reason.clear();
                 announce( string_format(
                               _( "Auto-walking toward %s. Normal safe-mode and interruption rules apply." ),
                               object.name ), true );

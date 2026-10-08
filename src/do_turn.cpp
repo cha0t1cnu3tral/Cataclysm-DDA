@@ -1,4 +1,6 @@
 #include "do_turn.h"
+#include "screen_reader.h"
+#include "screen_reader_tracker.h"
 
 #if defined(EMSCRIPTEN)
 #include <emscripten.h>
@@ -242,9 +244,16 @@ void handle_key_blocking_activity()
             || u.activity.moves_left > 0 );
     if( has_unfinished_activity || u.has_destination() ) {
         input_context ctxt = get_default_mode_input_context();
+        if( screen_reader::enabled() && screen_reader::tracker_walk_active() ) {
+            ctxt.register_action( "QUIT" );
+        }
         const std::string action = ctxt.handle_input( 0 );
         bool refresh = true;
-        if( action == "pause" ) {
+        if( screen_reader::enabled() && screen_reader::tracker_walk_active() &&
+            ( action == "QUIT" || action == "pause" || action == "main_menu" ) ) {
+            screen_reader::cancel_tracker_walk(
+                _( "Auto-walk canceled. You are back in control." ) );
+        } else if( action == "pause" ) {
             if( u.activity.is_interruptible_with_kb() ) {
                 g->cancel_activity_query( _( "Confirm:" ) );
             }
