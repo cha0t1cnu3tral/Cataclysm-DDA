@@ -299,6 +299,7 @@ WORLD *worldfactory::make_new_world( special_game_type special_type )
 
     std::unique_ptr<WORLD> special_world = std::make_unique<WORLD>();
     special_world->world_name = worldname;
+    special_world->active_mod_order = { mod_id( "dda" ), mod_id( "dda_tutorial" ) };
 
     special_world->WORLD_OPTIONS["WORLD_END"].setValue( "delete" );
 
@@ -411,6 +412,16 @@ void worldfactory::init()
             all_worlds[worldname]->world_saves.push_back( save_t::from_base_path( world_sav_file ) );
         }
         mman->load_mods_list( all_worlds[worldname].get() );
+        // Older tutorial worlds saved their default mods before the tutorial
+        // content was added. Restore it before any saved maps are loaded.
+        if( worldname == "TUTORIAL" ) {
+            auto &mods = all_worlds[worldname]->active_mod_order;
+            const mod_id tutorial_mod( "dda_tutorial" );
+            if( std::find( mods.begin(), mods.end(), tutorial_mod ) == mods.end() ) {
+                mods.push_back( tutorial_mod );
+                save = true;
+            }
+        }
 
         // load options into the world
         if( !all_worlds[worldname]->load_options() ) {

@@ -297,7 +297,8 @@ void main_menu::print_menu( const catacurses::window &w_open, int iSel, const po
                             int sel_line )
 {
     if( screen_reader::enabled() ) {
-        screen_reader::text( _( "Cataclysm: Dark Days Ahead. Control Shift F12 toggles screen reader mode. Control Shift F11 reads the screen." ) );
+        screen_reader::text(
+            _( "Cataclysm: Dark Days Ahead. Control Shift F12 toggles screen reader mode. Control Shift F11 reads the screen." ) );
     }
     main_menu_button_map.clear();
 
@@ -1084,7 +1085,7 @@ bool main_menu::load_game( std::string const &worldname, save_t const &savegame 
         world_generator->set_active_world( nullptr );
     } );
 
-    g->gamemode = nullptr;
+    g->gamemode = worldname == "TUTORIAL" ? get_special_game( special_game_type::TUTORIAL ) : nullptr;
     WORLD *world = world_generator->get_world( worldname );
     world_generator->last_world_name = world->world_name;
     world_generator->last_character_name = savegame.decoded_name();

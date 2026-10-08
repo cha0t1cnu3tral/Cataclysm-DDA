@@ -72,6 +72,7 @@
 #include "flag.h"
 #include "flat_set.h"
 #include "game.h"
+#include "gamemode.h"
 #include "game_constants.h"
 #include "inventory.h"
 #include "item.h"
@@ -1812,8 +1813,11 @@ void avatar::load( const JsonObject &data )
     } else {
         const scenario *generic_scenario = scenario::generic();
 
-        debugmsg( "Tried to use non-existent scenario '%s'. Setting to generic '%s'.",
-                  scen_ident.c_str(), generic_scenario->ident().c_str() );
+        // Legacy tutorials did not initialize a scenario before saving.
+        if( !( g && g->gametype() == special_game_type::TUTORIAL && !data.has_member( "scenario" ) ) ) {
+            debugmsg( "Tried to use non-existent scenario '%s'. Setting to generic '%s'.",
+                      scen_ident.c_str(), generic_scenario->ident().c_str() );
+        }
         set_scenario( generic_scenario );
     }
 

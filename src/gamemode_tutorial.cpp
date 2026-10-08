@@ -24,6 +24,7 @@
 #include "pocket_type.h"
 #include "point.h"
 #include "profession.h"
+#include "scenario.h"
 #include "scent_map.h"
 #include "stomach.h"
 #include "text_snippets.h"
@@ -163,6 +164,7 @@ bool tutorial_game::init()
     //~ default name for the tutorial
     player_character.name = _( "John Smith" );
     player_character.prof = profession::generic();
+    set_scenario( scenario::generic() );
     // overmap terrain coordinates
     const tripoint_om_omt lp( 50, 50, 0 );
     // Assume overmap zero
