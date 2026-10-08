@@ -3184,15 +3184,23 @@ bool game::handle_action()
             ui_manager::redraw();
             return false;
         }
+        const bool accessible_walk = screen_reader::enabled() && screen_reader::tracker_walk_active();
+        if( accessible_walk ) {
+            // Poll cancellation before consuming the next route step, including
+            // the final step whose removal makes has_destination() false.
+            handle_key_blocking_activity();
+            if( !player_character.has_destination() ) {
+                return false;
+            }
+        }
         act = player_character.get_next_auto_move_direction();
         if( act == ACTION_NULL ) {
             add_msg( m_info, _( "Auto-move canceled" ) );
             player_character.abort_automove();
             return false;
         }
-        handle_key_blocking_activity();
-        if( screen_reader::enabled() && !player_character.has_destination() ) {
-            return false;
+        if( !accessible_walk ) {
+            handle_key_blocking_activity();
         }
     } else if( player_character.has_destination_activity() ) {
         // starts destination activity after the player successfully reached his destination
