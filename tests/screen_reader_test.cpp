@@ -68,6 +68,21 @@ TEST_CASE( "screen_reader_narration_precedes_response_choices_without_repeating"
     CHECK( screen_reader::dialogue_speech( choice, "", "No", true ).text == "No" );
 }
 
+TEST_CASE( "screen_reader_popup_instructions_do_not_repeat_wrapped_fragments", "[screen_reader]" )
+{
+    const std::vector<std::string> lines = { "ESC, q, Q, or SPACE to go back.",
+                                             "ESC, q, Q, or SPACE", "RETURN or KEYPAD_ENTER to move anyway.", "RETURN or KEYPAD_ENTER"
+                                           };
+    CHECK( screen_reader::describe_changes( {}, lines, "", "", true ).text ==
+           "ESC, q, Q, or SPACE to go back.. RETURN or KEYPAD_ENTER to move anyway." );
+    CHECK( screen_reader::describe_changes( { lines[0], lines[2] }, lines, "", "",
+                                            false ).text.empty() );
+    CHECK( screen_reader::describe_changes( {}, { "Health 86", "8" }, "", "",
+                                            true ).text == "Health 86. 8" );
+    CHECK( screen_reader::describe_changes( {}, { "Active", "Actively moving" }, "", "", true ).text ==
+           "Active. Actively moving" );
+}
+
 TEST_CASE( "screen_reader_review_wraps_and_clamps_after_screen_changes", "[screen_reader]" )
 {
     CHECK( screen_reader::next_review_index( 0, -1, 3 ) == 2 );

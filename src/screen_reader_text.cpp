@@ -70,6 +70,28 @@ speech_update describe_changes( const std::vector<std::string> &before,
     const std::vector<std::string> lines = entering ? after : changed_lines( before, after );
     std::string result;
     for( const std::string &line : lines ) {
+        // Colored, wrapped controls can capture both a complete instruction
+        // and its fragments. Do not read those fragments a second time.
+        const auto word_character = []( unsigned char ch ) {
+            return std::isalnum( ch ) || ch >= 128;
+        };
+        const bool fragment = line.size() >= 6 && std::any_of( after.begin(), after.end(),
+        [&]( const std::string & whole ) {
+            if( whole.size() <= line.size() ) {
+                return false;
+            }
+            for( size_t at = whole.find( line ); at != std::string::npos; at = whole.find( line, at + 1 ) ) {
+                const size_t end = at + line.size();
+                if( ( at == 0 || !word_character( whole[at - 1] ) ) &&
+                    ( end == whole.size() || !word_character( whole[end] ) ) ) {
+                    return true;
+                }
+            }
+            return false;
+        } );
+        if( fragment ) {
+            continue;
+        }
         if( !result.empty() ) {
             result += ". ";
         }
