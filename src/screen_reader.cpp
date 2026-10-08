@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -156,7 +157,7 @@ class nvda_client
                 DebugLog( D_WARNING, D_MAIN ) << "NVDA speech failed: " << result;
             }
             if( std::getenv( "CATA_SCREEN_READER_TRACE" ) ) {
-                DebugLog( D_INFO, D_MAIN ) << "NVDA speech result: " << result << " text: " << value;
+                DebugLog( D_INFO, D_MAIN ) << "NVDA speech result: " << result << " text: " << value << std::flush;
             }
             if( braille ) {
                 braille( wide.c_str() );
@@ -253,8 +254,11 @@ void narration( const std::string &value, const void *source, size_t revision )
     narration_revision = revision;
 }
 
-detail_capture::detail_capture()
+detail_capture::detail_capture( bool enabled ) : active( enabled )
 {
+    if( !active ) {
+        return;
+    }
     if( detail_capture_depth == 0 ) {
         details.clear();
     }
@@ -263,7 +267,9 @@ detail_capture::detail_capture()
 
 detail_capture::~detail_capture()
 {
-    --detail_capture_depth;
+    if( active ) {
+        --detail_capture_depth;
+    }
 }
 
 capture_pause::capture_pause()

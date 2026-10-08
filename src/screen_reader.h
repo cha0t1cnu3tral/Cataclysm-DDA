@@ -39,8 +39,9 @@ void selection( const std::string &value );
 void narration( const std::string &value, const void *source, size_t revision );
 class detail_capture
 {
+        bool active;
     public:
-        detail_capture();
+        explicit detail_capture( bool enabled = true );
         ~detail_capture();
         detail_capture( const detail_capture & ) = delete;
         detail_capture &operator=( const detail_capture & ) = delete;

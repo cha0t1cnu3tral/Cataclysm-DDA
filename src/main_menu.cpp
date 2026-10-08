@@ -300,6 +300,9 @@ void main_menu::print_menu( const catacurses::window &w_open, int iSel, const po
                             int sel_line )
 {
     if( screen_reader::enabled() ) {
+        screen_reader::narration(
+            _( "Main menu. Left and right choose a menu. Up and down choose an option. Enter opens it." ),
+            this, 0 );
         screen_reader::text(
             _( "Cataclysm: Dark Days Ahead. Control Shift F12 toggles screen reader mode. Control Shift F11 reads the screen." ) );
     }

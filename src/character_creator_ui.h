@@ -131,6 +131,8 @@ class character_creator_ui
         character_creator_ui();
         // returns true if character creation completed successfully
         bool display();
+        // Suspend background creator narration while an edit dialog is open.
+        bool handling_action = false;
         // setup new uilist if necessary, assumes current tab has been set
         void setup_new_uilist();
         // setup the avatar for switching to a different tab

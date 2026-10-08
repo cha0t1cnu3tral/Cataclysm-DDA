@@ -265,7 +265,9 @@ void dialogue_imgui::draw_dialogue_imgui( bool is_computer, bool is_not_conversa
     ctxt.set_timeout( 10 );
 
     // Make sure our conversation partner's portrait is ready!
-    conversation->actor( true )->ensure_portrait_valid();
+    if( !screen_reader::enabled() ) {
+        conversation->actor( true )->ensure_portrait_valid();
+    }
 
     while( !conversation->done ) {
         ui_manager::redraw_invalidated();
@@ -295,7 +297,10 @@ void dialogue_imgui_impl::draw_dialogue_sidebar() const
     ImVec2 child_size = {sidebar_width(), ImGui::GetWindowHeight() - ( border_size() * 2 )};
     if( ImGui::BeginChild( "##DIALOGUE_SIDEBAR", child_size, child_flags ) ) {
 #ifdef TILES
-        std::optional<character_portrait_id> portrait = conversation->portrait_or_nullopt();
+        std::optional<character_portrait_id> portrait;
+        if( !screen_reader::enabled() ) {
+            portrait = conversation->portrait_or_nullopt();
+        }
         if( get_option<bool>( "USE_TILES" ) && portrait.has_value() && portrait.value().is_valid() ) {
             if( debug_mode ) {
                 cataimgui::draw_colored_text( "Portrait filename: " + portrait.value().str() );

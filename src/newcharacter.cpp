@@ -2752,7 +2752,7 @@ void character_creator_ui::update_uilist_position( ImVec2 new_position )
 
 void character_creator_ui_impl::draw_controls()
 {
-    screen_reader::detail_capture capture;
+    screen_reader::detail_capture capture( !ui_parent->handling_action );
     avatar &pc = get_avatar();
 
     const character_creator_tab switched_tab = cc_uistate.switched_tab;
@@ -2934,10 +2934,12 @@ bool character_creator_ui::display()
         input_context &current_tab_input = get_current_tab_input();
         input_context::scoped_activation active_tab_context( current_tab_input );
 
-        ui_manager::redraw();
         std::shared_ptr<uilist> current_tab_uilist = get_current_tab_uilist();
+        // Replace the previous tab's window before redrawing. Otherwise its
+        // stale selection is spoken under the new tab's heading.
+        cc_uilist_current = current_tab_uilist ? current_tab_uilist->create_or_get_ui() : nullptr;
+        ui_manager::redraw();
         if( current_tab_uilist ) {
-            cc_uilist_current = current_tab_uilist->create_or_get_ui();
             if( current_tab_uilist->query_setup() ) {
                 current_tab_uilist->query_once( current_tab_input, 33 );
             }
@@ -3435,6 +3437,8 @@ bool character_creator_callback::key( const input_context &ctxt, const input_eve
 
 bool character_creator_ui::handle_action( const std::string &action )
 {
+    restore_on_out_of_scope previous_handling( handling_action );
+    handling_action = true;
     if( screen_reader::enabled() && action == "CHARACTER_CREATOR_INFO" ) {
         const avatar &player = get_avatar();
         std::vector<std::pair<std::string, std::string>> fields = {

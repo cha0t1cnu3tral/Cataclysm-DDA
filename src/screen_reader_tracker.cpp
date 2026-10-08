@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "avatar.h"
+#include "cata_utility.h"
 #include "coordinates.h"
 #include "creature.h"
 #include "debug.h"
@@ -16,6 +17,7 @@
 #include "game_constants.h"
 #include "input_context.h"
 #include "input_enums.h"
+#include "input_popup.h"
 #include "item.h"
 #include "line.h"
 #include "map.h"
@@ -156,6 +158,9 @@ void object_tracker( int direction, bool items )
         return;
     }
     tracker_cursor cursor;
+    const std::vector<tracked_object> all_objects = objects;
+    std::string filter;
+    std::string selection_notice;
     if( selected_position ) {
         for( size_t i = 0; i < objects.size(); ++i ) {
             if( get_map().get_abs( objects[i].position ) == *selected_position &&
@@ -190,7 +195,7 @@ void object_tracker( int direction, bool items )
         fold_and_print( window, point( 2, 2 ), getmaxx( window ) - 4, c_white, summary );
         fold_and_print( window, point( 2, 6 ), getmaxx( window ) - 4, c_white, item_text );
         fold_and_print( window, point( 2, 10 ), getmaxx( window ) - 4, c_light_gray,
-                        _( "Control+[ / Control+]: previous / next object. [ / ]: previous / next item. Enter: auto-walk to the selected object. Escape: close. Browsing uses no turns." ) );
+                        _( "Control+[ / Control+]: previous / next object. [ / ]: previous / next item. Slash: search by object or item name. Enter: auto-walk to the selected object. Escape: close. Browsing uses no turns." ) );
         wnoutrefresh( window );
         text( summary + ". " + item_text, true );
     } );
@@ -203,6 +208,7 @@ void object_tracker( int direction, bool items )
     ctxt.register_action( "CONFIRM" );
     ctxt.register_action( "QUIT" );
     ctxt.register_action( "HELP_KEYBINDINGS" );
+    ctxt.register_action( "FILTER" );
     bool announce_selection = true;
     while( enabled() ) {
         selected_position = get_map().get_abs( objects[cursor.object].position );
@@ -214,12 +220,13 @@ void object_tracker( int direction, bool items )
             const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
                                           string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
                                                   object.items[cursor.item] );
-            const std::string selection = string_format( _( "Object %d of %d: %s. %s. %s" ),
+            const std::string selection = selection_notice + string_format( _( "Object %d of %d: %s. %s. %s" ),
                                           cursor.object + 1, objects.size(), object.name, bearing( object.position ), item_text );
             DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker selection: " << selection;
             // Navigation must speak even when a renderer skips a frame, the
             // UI snapshot has not changed, or an empty item list is selected.
             announce( selection, true );
+            selection_notice.clear();
             announce_selection = false;
         }
         const std::string action = ctxt.handle_input( 100 );
@@ -232,6 +239,31 @@ void object_tracker( int direction, bool items )
             cursor.cycle_items( action == "TRACKER_PREVIOUS_ITEM" ? -1 : 1,
                                 objects[cursor.object].items.size() );
             announce_selection = true;
+        } else if( action == "FILTER" ) {
+            string_input_popup_imgui popup( FULL_SCREEN_WIDTH, filter );
+            popup.set_label( _( "Search visible objects and ground items:" ) );
+            popup.set_description(
+                _( "Type part of a name. Leave blank to show all objects. Enter applies; Escape cancels." ) );
+            const std::string query = popup.query();
+            if( !popup.cancelled() ) {
+                std::vector<tracked_object> matches;
+                for( const tracked_object &object : all_objects ) {
+                    if( query.empty() || lcmatch( object.name, query ) ||
+                    std::any_of( object.items.begin(), object.items.end(), [&]( const std::string & item ) {
+                    return lcmatch( item, query );
+                    } ) ) {
+                        matches.push_back( object );
+                    }
+                }
+                if( matches.empty() ) {
+                    selection_notice = _( "No matching visible objects. Previous list retained. " );
+                } else {
+                    objects = std::move( matches );
+                    filter = query;
+                    cursor = {};
+                }
+                announce_selection = true;
+            }
         } else if( action == "CONFIRM" ) {
             const tracked_object &object = objects[cursor.object];
             bool reported = false;

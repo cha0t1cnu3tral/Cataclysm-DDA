@@ -36,7 +36,7 @@ The object tracker lists visible furniture, doors, stairs, ground-item piles,
 vehicles (once each, at the nearest visible part), and creatures on the current
 level, ordered nearest first. It announces the selected object's bearing and the
 selected item's name and quantity. Object and item browsing wrap independently;
-switching objects resets the item selection. Browsing does not consume turns.
+switching objects resets the item selection. Slash opens a search by object or ground-item name; an empty search restores all visible objects. Searches never expose hidden objects. Browsing does not consume turns.
 In screen reader mode, these four shortcuts take priority over conflicting
 gameplay bindings. Other menus and text entry retain their bracket controls.
 Both character and keycode keyboard input are supported. Turning screen reader
