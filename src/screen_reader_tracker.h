@@ -13,7 +13,8 @@ struct tracker_cursor {
     void cycle_items( int direction, size_t count );
 };
 std::string tracker_key_action( int key, bool control, bool alt, bool shift );
-void object_tracker( int direction, bool items = false );
+enum class tracker_kind { objects, exits, hazards };
+void object_tracker( int direction, bool items = false, tracker_kind kind = tracker_kind::objects );
 void update_tracker_walk();
 bool tracker_walk_active();
 }

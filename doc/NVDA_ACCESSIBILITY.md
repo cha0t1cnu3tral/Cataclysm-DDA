@@ -21,6 +21,8 @@ the game is foreground on the normal Windows desktop.
 | Control+Shift+Up/Down | Review the preceding/following text entry; wraps at either end |
 | Control+Shift+F8 | Open a text list of adjacent tiles and visible creatures |
 | Control+Shift+F7 | Browse character stats, needs, stamina, bionic power, and body-part health |
+| Control+Shift+F5 | Exit finder: browse stairs, doors, and outdoor destinations |
+| Control+Shift+F4 | Hazard finder: browse visible known traps and dangerous fields |
 | Control+Shift+F6 | Read the complete character stats report without opening a menu |
 | Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next object inside it |
 | [ / ] | Open the tracker from gameplay; browse previous/next visible ground item at the selected object |
@@ -114,3 +116,26 @@ Menu navigation speaks the selected option and its state, rather than reading ev
 Movement speech describes the current tile without rereading the sidebar. Game messages still speak as they occur. Control+Shift+F6 reads current/base attributes, stamina, speed, focus, morale, needs, pain, weariness, radiation, bionic power, and body-part health. Control+Shift+F7 opens the same stats as a browsable list. Neither stats command consumes a turn.
 
 Confirmation dialogs speak the current Yes, No, or other button with its key hint. Left/Right changes the spoken selection; hovering a button reads it too. Activating a button by Enter, mouse click, or its shortcut announces the chosen response. This applies only in screen reader mode.
+
+## Exit and hazard finders
+
+During gameplay, Control+Shift+F5 opens visible doors, stairs, and outdoor destinations on the current
+level, nearest first. Outdoor destinations are walkable outdoor tiles beside a
+visible walkable indoor tile; Enter auto-walks onto the outdoor destination. Each candidate includes a tile description and compass
+offsets. Doors are possible exits: a door can lead to another room, be locked,
+or require opening. The finder does not claim a route leads outdoors and does
+not reveal hidden exits. Staircases announce whether they lead up or down. Enter uses normal safe auto-walking; closed doors are
+approached without automatically opening them. Stairs are not automatically used.
+
+Control+Shift+F4 lists known visible traps and tiles with dangerous fields,
+nearest first. Enter approaches within one tile using the normal safe route
+checks. It never disarms a trap or deliberately steps onto the selected hazard.
+This list is a snapshot, not a guarantee that an area is safe; unseen hazards
+remain hidden and hazards may change after a turn.
+
+Both finders use the tracker controls: Control+[ / Control+] browse targets,
+slash searches descriptions, Enter approaches, and Escape closes. Brackets
+review ground items (these focused lists have no item entries). Browsing costs
+no turns. Control+Shift+F11 reads the finder title and instructions. These
+shortcuts and all new dialog announcements are active only in screen reader
+mode. Turning the mode off closes an open finder.

@@ -1,5 +1,6 @@
 #include "cursesdef.h" // IWYU pragma: associated
 #include "sdltiles.h" // IWYU pragma: associated
+#include "screen_reader_tracker.h"
 
 #include "cata_shader.h"
 #include "cuboid_rectangle.h"
@@ -5831,7 +5832,8 @@ static void CheckMessages()
                                                     ( screen_reader::enabled() &&
                                                       ( reader_key.sym == SDLK_F11 || reader_key.sym == SDLK_F10 ||
                                                         reader_key.sym == SDLK_F9 || reader_key.sym == SDLK_F8 ||
-                                                        reader_key.sym == SDLK_F7 || reader_key.sym == SDLK_F6 || reader_key.sym == SDLK_UP ||
+                                                        reader_key.sym == SDLK_F7 || reader_key.sym == SDLK_F6 ||
+                                                        reader_key.sym == SDLK_F5 || reader_key.sym == SDLK_F4 || reader_key.sym == SDLK_UP ||
                                                         reader_key.sym == SDLK_DOWN ) );
                         if( reader_command ) {
                             if( !ev.key.repeat ) {
@@ -5855,6 +5857,14 @@ static void CheckMessages()
                                         break;
                                     case SDLK_F7:
                                         screen_reader::status();
+                                        ui_manager::redraw();
+                                        break;
+                                    case SDLK_F5:
+                                        screen_reader::object_tracker( 0, false, screen_reader::tracker_kind::exits );
+                                        ui_manager::redraw();
+                                        break;
+                                    case SDLK_F4:
+                                        screen_reader::object_tracker( 0, false, screen_reader::tracker_kind::hazards );
                                         ui_manager::redraw();
                                         break;
                                     case SDLK_F6:

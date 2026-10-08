@@ -1,5 +1,6 @@
 #include "screen_reader_tracker.h"
 #include "screen_reader.h"
+#include "screen_reader_game.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -68,7 +69,7 @@ std::string bearing( const tripoint_bub_ms &position )
     return result.empty() ? _( "Here" ) : result;
 }
 
-std::vector<tracked_object> visible_objects()
+std::vector<tracked_object> visible_objects( tracker_kind kind )
 {
     avatar &player = get_avatar();
     map &here = get_map();
@@ -86,6 +87,39 @@ std::vector<tracked_object> visible_objects()
     } );
     std::unordered_set<const vehicle *> vehicles;
     for( const tripoint_bub_ms &p : positions ) {
+        if( kind == tracker_kind::exits ) {
+            std::string exit_name;
+            if( here.has_flag( ter_furn_flag::TFLAG_GOES_UP, p ) ||
+                here.has_flag( ter_furn_flag::TFLAG_GOES_DOWN, p ) ) {
+                exit_name = here.has_flag( ter_furn_flag::TFLAG_GOES_UP, p ) ?
+                            _( "Staircase or passage up" ) : _( "Staircase or passage down" );
+            } else if( here.has_flag( ter_furn_flag::TFLAG_DOOR, p ) ) {
+                exit_name = _( "Door" );
+            } else if( here.is_outside( p ) && here.passable( p ) ) {
+                // Only offer outdoor destinations beside a visible, walkable
+                // indoor tile. Never infer a building's hidden layout.
+                for( const tripoint_bub_ms &neighbor : here.points_in_radius( p, 1, 0 ) ) {
+                    const tripoint offset = ( neighbor - p ).raw();
+                    if( std::abs( offset.x ) + std::abs( offset.y ) == 1 &&
+                        here.inbounds( neighbor ) && player.sees( here, neighbor ) &&
+                        !here.is_outside( neighbor ) && here.passable( neighbor ) ) {
+                        exit_name = _( "Outside of building" );
+                        break;
+                    }
+                }
+            }
+            if( !exit_name.empty() ) {
+                objects.push_back( { p, exit_name + ": " + describe_tile( p ), {},
+                                     rl_dist( player.pos_bub(), p ), here.impassable( p ) ? 1 : 0 } );
+            }
+            continue;
+        }
+        if( kind == tracker_kind::hazards ) {
+            if( here.can_see_trap_at( p, player ) || here.dangerous_field_at( p ) ) {
+                objects.push_back( { p, describe_tile( p ), {}, rl_dist( player.pos_bub(), p ), 1 } );
+            }
+            continue;
+        }
         std::vector<std::string> items;
         if( here.sees_some_items( p, player ) ) {
             for( const item &object : here.i_at( p ) ) {
@@ -113,7 +147,7 @@ std::vector<tracked_object> visible_objects()
         }
     }
     for( Creature &creature : g->all_creatures() ) {
-        if( &creature != &player && player.sees( here, creature ) &&
+        if( kind == tracker_kind::objects && &creature != &player && player.sees( here, creature ) &&
             creature.pos_bub().z() == player.pos_bub().z() ) {
             objects.push_back( { creature.pos_bub(), creature.disp_name() + " " +
                                  Creature::get_attitude_ui_data( creature.attitude_to( player ) ).first.translated(),
@@ -145,23 +179,25 @@ void update_tracker_walk()
               _( "Auto-walk stopped before reaching the target." ), true );
 }
 
-void object_tracker( int direction, bool items )
+void object_tracker( int direction, bool items, tracker_kind kind )
 {
     DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker requested: direction=" << direction
                                << " items=" << items;
     if( !enabled() || !g || !g->w_terrain ) {
         return;
     }
-    std::vector<tracked_object> objects = visible_objects();
+    std::vector<tracked_object> objects = visible_objects( kind );
     if( objects.empty() ) {
-        announce( _( "No visible objects to track." ), true );
+        announce( kind == tracker_kind::exits ? _( "No visible doors, stairs, or outdoor exits found." ) :
+                  kind == tracker_kind::hazards ? _( "No visible known traps or dangerous fields found." ) :
+                  _( "No visible objects to track." ), true );
         return;
     }
     tracker_cursor cursor;
     const std::vector<tracked_object> all_objects = objects;
     std::string filter;
     std::string selection_notice;
-    if( selected_position ) {
+    if( kind == tracker_kind::objects && selected_position ) {
         for( size_t i = 0; i < objects.size(); ++i ) {
             if( get_map().get_abs( objects[i].position ) == *selected_position &&
                 objects[i].name == selected_name ) {
@@ -188,10 +224,12 @@ void object_tracker( int direction, bool items )
                                     cursor.object + 1, objects.size(), object.name, bearing( object.position ) );
         const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
                                       string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
-                                              object.items[cursor.item] );
+                                          object.items[cursor.item] );
         werase( window );
         draw_border( window );
-        center_print( window, 0, c_white, _( "Object tracker" ) );
+        center_print( window, 0, c_white,
+                      kind == tracker_kind::exits ? _( "Exit finder: stairs, doors, and outdoors" ) :
+                      kind == tracker_kind::hazards ? _( "Hazard finder" ) : _( "Object tracker" ) );
         fold_and_print( window, point( 2, 2 ), getmaxx( window ) - 4, c_white, summary );
         fold_and_print( window, point( 2, 6 ), getmaxx( window ) - 4, c_white, item_text );
         fold_and_print( window, point( 2, 10 ), getmaxx( window ) - 4, c_light_gray,
@@ -219,7 +257,7 @@ void object_tracker( int direction, bool items )
             const tracked_object &object = objects[cursor.object];
             const std::string item_text = object.items.empty() ? _( "No visible ground items here." ) :
                                           string_format( _( "Item %d of %d: %s" ), cursor.item + 1, object.items.size(),
-                                                  object.items[cursor.item] );
+                                              object.items[cursor.item] );
             const std::string selection = selection_notice + string_format( _( "Object %d of %d: %s. %s. %s" ),
                                           cursor.object + 1, objects.size(), object.name, bearing( object.position ), item_text );
             DebugLog( D_INFO, D_MAIN ) << "Screen reader tracker selection: " << selection;
