@@ -139,3 +139,14 @@ review ground items (these focused lists have no item entries). Browsing costs
 no turns. Control+Shift+F11 reads the finder title and instructions. These
 shortcuts and all new dialog announcements are active only in screen reader
 mode. Turning the mode off closes an open finder.
+
+### Exit-finder update validation (2026-10-08)
+
+The Windows tiles build passed with warnings treated as errors. The existing
+screen reader regression executable passed 53 assertions in 10 cases. A live
+NVDA test using copied saves delivered outdoor-boundary and downward-staircase
+selections, started a staircase auto-walk, reported an interrupted walk, and
+reported an empty hazard list. Controller calls returned success. Actual arrival
+at stairs/outdoors, populated hazard lists, and the new confirmation selection
+and activation speech still need listening verification. Visual screenshot
+capture was black in this test session; no visual validation is claimed.
