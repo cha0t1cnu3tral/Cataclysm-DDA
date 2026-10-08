@@ -185,3 +185,15 @@ accepted the Ignore Enemy command, then completed an outdoor route and delivered
 its arrival report after position speech. A second newly revealed zombie exposed
 the graphical autopeek screen; the subsequent change replaces that screen as
 described above. These traces verify controller delivery, not human listening.
+
+### Category tracker validation (2026-10-08)
+
+The Windows tiles build passed with warnings treated as errors. Rebuilt screen
+reader tests passed 61 assertions in 11 cases, including category selection
+reset when changing to a category with fewer entries. A live copied-save test
+verified Control+brackets changing categories, plain brackets changing entries,
+backward entry wrapping from the first to the last ground item, and category
+changes resetting to the first entry. The same test verified that Control+
+brackets still change exit-finder destinations. NVDA controller calls returned
+success for the category names, entry counts, names, and compass offsets. These
+checks verify text delivery; human listening feedback is still useful.
