@@ -20,7 +20,8 @@ the game is foreground on the normal Windows desktop.
 | Control+Shift+F9 | Stop game speech |
 | Control+Shift+Up/Down | Review the preceding/following text entry; wraps at either end |
 | Control+Shift+F8 | Open a text list of adjacent tiles and visible creatures |
-| Control+Shift+F7 | Open numerical character health and condition information |
+| Control+Shift+F7 | Browse character stats, needs, stamina, bionic power, and body-part health |
+| Control+Shift+F6 | Read the complete character stats report without opening a menu |
 | Control+[ / Control+] | Open the object tracker from gameplay; browse the previous/next object inside it |
 | [ / ] | Open the tracker from gameplay; browse previous/next visible ground item at the selected object |
 | Enter / Escape | Inside the tracker, start auto-walking to the selected object / close without walking |
@@ -94,3 +95,7 @@ This integration is not a Windows UI Automation provider. Complex custom
 screens need user testing before claiming complete accessibility. Keep any
 unverified or failing screens in the PR's test notes, and obtain NVDA user
 feedback on the playable build before publishing the PR.
+
+Menu navigation speaks the selected option and its state, rather than reading every visible row or changing tooltip. List menus include the selected position. Control+Shift+F11 reads the full screen, including longer descriptions; Control+Shift+Up/Down reviews it line by line.
+
+Movement speech describes the current tile without rereading the sidebar. Game messages still speak as they occur. Control+Shift+F6 reads current/base attributes, stamina, speed, focus, morale, needs, pain, weariness, radiation, bionic power, and body-part health. Control+Shift+F7 opens the same stats as a browsable list. Neither stats command consumes a turn.

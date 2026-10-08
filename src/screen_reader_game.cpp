@@ -21,6 +21,7 @@
 #include "translations.h"
 #include "trap.h"
 #include "uilist.h"
+#include "units.h"
 #include "vehicle.h"
 #include "vpart_position.h"
 
@@ -136,7 +137,7 @@ void surroundings()
     menu.query();
 }
 
-void status()
+void status( bool read_all )
 {
     if( !enabled() || !g || !g->w_terrain ) {
         announce( _( "Character status is available during a game." ), true );
@@ -144,17 +145,37 @@ void status()
     }
     avatar &player = get_avatar();
     uilist menu;
-    menu.title = _( "Character status" );
-    menu.addentry( 0, true, MENU_AUTOASSIGN, string_format( _( "Stamina: %d of %d" ),
-                   player.get_stamina(), player.get_stamina_max() ) );
-    menu.addentry( 1, true, MENU_AUTOASSIGN,
-                   string_format( _( "Hunger: %s. Thirst: %s. Sleepiness: %s. Pain: %d" ),
-                                  display::hunger_text_color( player ).first, display::thirst_text_color( player ).first,
-                                  display::sleepiness_text_color( player ).first, player.get_perceived_pain() ) );
+    menu.title = _( "Character stats" );
+    std::vector<std::string> stats = {
+        string_format( _( "Strength: %d, base %d" ), player.get_str(), player.get_str_base() ),
+        string_format( _( "Dexterity: %d, base %d" ), player.get_dex(), player.get_dex_base() ),
+        string_format( _( "Intelligence: %d, base %d" ), player.get_int(), player.get_int_base() ),
+        string_format( _( "Perception: %d, base %d" ), player.get_per(), player.get_per_base() ),
+        string_format( _( "Stamina: %d of %d" ), player.get_stamina(), player.get_stamina_max() ),
+        string_format( _( "Speed: %d. Focus: %d. Morale: %d" ), player.get_speed(),
+                       player.get_focus(), player.get_morale_level() ),
+        string_format( _( "Hunger: %s. Thirst: %s. Sleepiness: %s. Pain: %d" ),
+                       display::hunger_text_color( player ).first, display::thirst_text_color( player ).first,
+                       display::sleepiness_text_color( player ).first, player.get_perceived_pain() ),
+        string_format( _( "Weariness: %s. Radiation: %d" ),
+                       display::weariness_text_color( player ).first, player.get_rad() ),
+        string_format( _( "Bionic power: %d of %d kilojoules" ),
+                       units::to_kilojoule( player.get_power_level() ), units::to_kilojoule( player.get_max_power_level() ) )
+    };
     for( const bodypart_id &part : player.get_all_body_parts( get_body_part_flags::only_main ) ) {
-        menu.addentry( static_cast<int>( menu.entries.size() ), true, MENU_AUTOASSIGN,
-                       string_format( _( "%s: health %d of %d" ), part->name.translated(),
-                                      player.get_part_hp_cur( part ), player.get_part_hp_max( part ) ) );
+        stats.push_back( string_format( _( "%s: health %d of %d" ), part->name.translated(),
+                                        player.get_part_hp_cur( part ), player.get_part_hp_max( part ) ) );
+    }
+    if( read_all ) {
+        std::string report = _( "Character stats." );
+        for( const std::string &stat : stats ) {
+            report += " " + stat + ".";
+        }
+        announce( report, true );
+        return;
+    }
+    for( const std::string &stat : stats ) {
+        menu.addentry( static_cast<int>( menu.entries.size() ), true, MENU_AUTOASSIGN, stat );
     }
     menu.query();
 }

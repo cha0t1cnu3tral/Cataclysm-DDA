@@ -429,7 +429,7 @@ void dialogue_imgui_impl::draw_responses()
     for( int i = 0; i < static_cast<int>( response_list.size() ); i++ ) {
         const talk_data &talk = response_list[i];
         if( sel_response == i ) {
-            screen_reader::text( talk.hotkey_desc + ": " + talk.text, true );
+            screen_reader::selection( talk.hotkey_desc + ": " + talk.text );
         }
 
         // Selection indicator

@@ -21,6 +21,7 @@
 #include "sdltiles.h"
 #include "input_popup.h"
 #include "translations.h"
+#include "string_formatter.h"
 #include "ui_manager.h"
 #include "cata_imgui.h"
 #include "imgui/imgui.h"
@@ -121,10 +122,11 @@ void uilist_impl::draw_controls()
                             if( !entry.enabled ) {
                                 spoken += " " + std::string( _( "unavailable" ) );
                             }
+                            spoken += string_format( _( ". %d of %d" ), i + 1, parent.fentries.size() );
+                            screen_reader::selection( spoken );
                             if( parent.desc_enabled ) {
-                                spoken += ". " + entry.desc;
+                                screen_reader::text( entry.desc );
                             }
-                            screen_reader::text( spoken, true );
                         }
                         ImGui::PushID( i );
                         ImGui::TableNextRow( ImGuiTableRowFlags_None, entry_height );

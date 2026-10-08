@@ -62,8 +62,10 @@ speech_update describe_changes( const std::vector<std::string> &before,
                                 const std::string &old_focus, const std::string &new_focus,
                                 bool entering )
 {
-    if( !entering && !new_focus.empty() && new_focus != old_focus ) {
-        return { new_focus, true };
+    if( !new_focus.empty() ) {
+        // Opening or moving within a menu reads its selected option. Keep the
+        // rest of the screen available to explicit read/review commands.
+        return { entering || new_focus != old_focus ? new_focus : std::string(), true };
     }
     const std::vector<std::string> lines = entering ? after : changed_lines( before, after );
     std::string result;

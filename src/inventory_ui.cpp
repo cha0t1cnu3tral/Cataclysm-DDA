@@ -1749,7 +1749,7 @@ void inventory_column::draw( const catacurses::window &win, const point &p,
             if( entry.denial.has_value() && !entry.denial->empty() ) {
                 spoken += ". " + *entry.denial;
             }
-            screen_reader::text( spoken, true );
+            screen_reader::selection( spoken );
         }
 
         const int hx_max = p.x + get_width();

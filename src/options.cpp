@@ -3705,7 +3705,7 @@ std::string options_manager::show( bool ingame, const bool world_options_only, b
             const PageItem &curr_item = page_items[visible_items[i]];
             auto name_value = fmt_name_value( curr_item, is_selected );
             if( is_selected ) {
-                screen_reader::text( name_value.first.s + ": " + name_value.second.s, true );
+                screen_reader::selection( name_value.first.s + ": " + name_value.second.s );
             }
 
             const std::string name = utf8_truncate( name_value.first.s, name_width );

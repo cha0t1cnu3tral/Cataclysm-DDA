@@ -27,7 +27,7 @@ TEST_CASE( "screen_reader_announces_selection_changes_even_when_labels_are_uncha
 {
     const std::vector<std::string> labels = { "Choose an item", "knife", "coat" };
     const auto entry = screen_reader::describe_changes( {}, labels, "", "knife", true );
-    CHECK( entry.text == "Choose an item. knife. coat" );
+    CHECK( entry.text == "knife" );
     CHECK( entry.interrupt );
     const auto selection = screen_reader::describe_changes( labels, labels, "knife", "coat", false );
     CHECK( selection.text == "coat" );
@@ -37,6 +37,17 @@ TEST_CASE( "screen_reader_announces_selection_changes_even_when_labels_are_uncha
                          false );
     CHECK( message.text == "Health: 25" );
     CHECK_FALSE( message.interrupt );
+}
+
+TEST_CASE( "screen_reader_menu_focus_ignores_surrounding_layout_changes", "[screen_reader]" )
+{
+    const std::vector<std::string> before = { "Choose", "Knife", "Coat", "Description" };
+    const std::vector<std::string> after = { "Choose", "Knife", "Coat", "A longer description" };
+    CHECK( screen_reader::describe_changes( before, after, "Knife", "Knife", false ).text.empty() );
+    CHECK( screen_reader::describe_changes( {}, after, "", "Coat. 2 of 2", true ).text == "Coat. 2 of 2" );
+    CHECK( screen_reader::describe_changes( before, after, "Knife", "Coat", false ).text == "Coat" );
+    CHECK( screen_reader::describe_changes( {}, { "Confirm quitting?" }, "", "", true ).text ==
+           "Confirm quitting?" );
 }
 
 TEST_CASE( "screen_reader_review_wraps_and_clamps_after_screen_changes", "[screen_reader]" )

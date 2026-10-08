@@ -3400,12 +3400,17 @@ void game::draw( ui_adaptor &ui )
     if( screen_reader::enabled() && !screen_reader::tracker_walk_active() ) {
         const tripoint_abs_ms location = get_map().get_abs( u.pos_bub() );
         screen_reader::text( string_format( _( "Position %d, %d, level %d. %s" ),
-                                           location.x(), location.y(), location.z(),
-                                           screen_reader::describe_tile( u.pos_bub() ) ) );
+                                            location.x(), location.y(), location.z(),
+                                            screen_reader::describe_tile( u.pos_bub() ) ) );
     }
     wnoutrefresh( w_terrain );
 
-    draw_panels( true );
+    {
+        // Messages already announce themselves. Sidebar stats are available on
+        // demand and must not be mixed into movement or menu speech.
+        screen_reader::capture_pause pause;
+        draw_panels( true );
+    }
 
     // Ensure that the cursor lands on the character when everything is drawn.
     // This allows screen readers to describe the area around the player, making it
@@ -6144,8 +6149,8 @@ look_around_result game::look_around(
             if( screen_reader::enabled() ) {
                 const tripoint delta = ( lp - u.pos_bub() ).raw();
                 screen_reader::text( string_format( _( "Look cursor: %d east, %d south, %d levels above. %s" ),
-                                                   delta.x, delta.y, delta.z,
-                                                   screen_reader::describe_tile( lp ) ), true );
+                                                    delta.x, delta.y, delta.z,
+                                                    screen_reader::describe_tile( lp ) ), true );
             }
 
             wnoutrefresh( w_info );

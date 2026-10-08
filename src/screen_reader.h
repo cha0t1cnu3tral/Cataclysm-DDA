@@ -32,6 +32,16 @@ void end_ui();
 void finish_frame();
 void capture_window( const catacurses::window &window );
 void text( const std::string &value, bool focused = false );
+// Prefer one complete semantic selection over fragments captured by widgets.
+void selection( const std::string &value );
+class capture_pause
+{
+    public:
+        capture_pause();
+        ~capture_pause();
+        capture_pause( const capture_pause & ) = delete;
+        capture_pause &operator=( const capture_pause & ) = delete;
+};
 void announce( const std::string &value, bool interrupt = false );
 void toggle();
 void read_screen();
@@ -39,6 +49,6 @@ void repeat();
 void review( int direction );
 void stop();
 void surroundings();
-void status();
+void status( bool read_all = false );
 }
 #endif

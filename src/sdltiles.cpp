@@ -5831,7 +5831,7 @@ static void CheckMessages()
                                                     ( screen_reader::enabled() &&
                                                       ( reader_key.sym == SDLK_F11 || reader_key.sym == SDLK_F10 ||
                                                         reader_key.sym == SDLK_F9 || reader_key.sym == SDLK_F8 ||
-                                                        reader_key.sym == SDLK_F7 || reader_key.sym == SDLK_UP ||
+                                                        reader_key.sym == SDLK_F7 || reader_key.sym == SDLK_F6 || reader_key.sym == SDLK_UP ||
                                                         reader_key.sym == SDLK_DOWN ) );
                         if( reader_command ) {
                             if( !ev.key.repeat ) {
@@ -5856,6 +5856,9 @@ static void CheckMessages()
                                     case SDLK_F7:
                                         screen_reader::status();
                                         ui_manager::redraw();
+                                        break;
+                                    case SDLK_F6:
+                                        screen_reader::status( true );
                                         break;
                                     case SDLK_UP:
                                         screen_reader::review( -1 );

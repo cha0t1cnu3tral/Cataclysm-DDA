@@ -28,6 +28,8 @@ bool enabled()
 namespace
 {
 bool collecting = false;
+int capture_pause_depth = 0;
+bool semantic_selection = false;
 const void *current_ui = nullptr;
 const void *previous_ui = nullptr;
 std::vector<std::string> frame;
@@ -186,6 +188,7 @@ void begin_ui( const void *identity, bool on_top )
         current_ui = identity;
         frame.clear();
         focused.clear();
+        semantic_selection = false;
         frame_ready = true;
     }
 }
@@ -197,7 +200,7 @@ void end_ui()
 
 void text( const std::string &value, bool is_focused )
 {
-    if( !collecting ) {
+    if( !collecting || capture_pause_depth > 0 ) {
         return;
     }
     const std::string clean = readable_text( value );
@@ -207,9 +210,33 @@ void text( const std::string &value, bool is_focused )
     if( std::find( frame.begin(), frame.end(), clean ) == frame.end() ) {
         frame.push_back( clean );
     }
-    if( is_focused && std::find( focused.begin(), focused.end(), clean ) == focused.end() ) {
+    if( is_focused && !semantic_selection &&
+        std::find( focused.begin(), focused.end(), clean ) == focused.end() ) {
         focused.push_back( clean );
     }
+}
+
+void selection( const std::string &value )
+{
+    if( !collecting || capture_pause_depth > 0 ) {
+        return;
+    }
+    text( value );
+    const std::string clean = readable_text( value );
+    if( !clean.empty() ) {
+        focused = { clean };
+        semantic_selection = true;
+    }
+}
+
+capture_pause::capture_pause()
+{
+    ++capture_pause_depth;
+}
+
+capture_pause::~capture_pause()
+{
+    --capture_pause_depth;
 }
 
 void finish_frame()
